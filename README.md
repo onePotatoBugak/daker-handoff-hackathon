@@ -1,36 +1,43 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Now Your Thon
+### Daker Handoff Hackathon
 
-## Getting Started
+월간 해커톤 : 긴급 인수인계 해커톤 - 문서만 남기고 사라졌다
 
-First, run the development server:
+문서 기반으로 서비스를 재구성하고 더미데이터와 localStorage로 구현한 Daker 긴급 인수인계 해커톤 프론트엔드 프로젝트
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## 1.1. 프로젝트 명
+Now Your Thon
+## 1.2. 프로젝트 구성원
+팀명 : 한부각감자부각
+|   |clainy|정부각|오미자차|이부각|co2ma|
+|-----|----|---|---|---|---|
+|역할|Full Stack Developer|Backend Developer|DevOps Engineer|Backend Developer|Backend Developer|
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 1.3. 프로젝트 컨셉
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## 2.1. 기획의도 및 요구사항 분석
 
-## Learn More
+## 2.2. 시나리오 설정
 
-To learn more about Next.js, take a look at the following resources:
+## 2.3. 주요 기능
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## 3.1. 개발환경
+(예시)
+* OS : 
+* DB : 
+* Front-end : 
+* Back-end : 
+* Developer Tools : VS Code
+* GitHub
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## 3.2. 사용한 API
 
-## Deploy on Vercel
+## 3.3. 필요한 라이브러리
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+##  4. 화면설계 및 기능 구현
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+##  5.1. 최종 결과
+
+##  5.2. 개선 해야 할 사항
+

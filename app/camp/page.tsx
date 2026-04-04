@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useMemo, Suspense } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Plus, X, ExternalLink, Users, Pencil } from 'lucide-react';
 import Navbar from '@/components/Navbar';
@@ -159,6 +159,7 @@ function TeamForm({
     lookingFor: editTarget?.lookingFor ?? ([] as string[]),
     contactUrl: editTarget?.contact.url ?? '',
     memberCount: editTarget?.memberCount ?? 1,
+    isOpen: editTarget?.isOpen ?? true,
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -192,12 +193,13 @@ function TeamForm({
         lookingFor: form.lookingFor,
         contact: { type: 'link', url: form.contactUrl.trim() },
         memberCount: form.memberCount,
+        isOpen: form.isOpen,
       });
     } else {
       addTeam({
         hackathonSlug: form.hackathonSlug || '',
         name: form.name.trim(),
-        isOpen: true,
+        isOpen: form.isOpen,
         memberCount: form.memberCount,
         lookingFor: form.lookingFor,
         intro: form.intro.trim(),
@@ -219,6 +221,8 @@ function TeamForm({
         </div>
 
         <form onSubmit={handleSubmit} className="p-5 space-y-4">
+          
+
           <div>
             <label className="block text-sm font-semibold text-slate-700 mb-1.5">
               팀 이름 <span className="text-red-500">*</span>
@@ -241,7 +245,20 @@ function TeamForm({
               {hackathons.map((h) => <option key={h.slug} value={h.slug}>{h.title}</option>)}
             </select>
           </div>
-
+          <div>
+            <label className="block text-sm font-semibold text-slate-700 mb-1.5">
+              모집 상태 <span className="text-red-500">*</span>
+            </label>
+            <select
+              value={form.isOpen ? 'true' : 'false'}
+              onChange={(e) => setForm((p) => ({ ...p, isOpen: e.target.value === 'true' }))}
+              className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-700 focus:outline-none focus:border-violet-400"
+            >
+              <option value="true">모집 중</option>
+              <option value="false">모집 마감</option>
+            </select>
+            <p className="text-[11px] text-slate-400 mt-1 ml-1">팀원 모집을 잠시 멈추려면 '모집 마감'으로 설정하세요.</p>
+          </div>
           <div>
             <label className="block text-sm font-semibold text-slate-700 mb-1.5">
               팀 소개 <span className="text-red-500">*</span>
@@ -309,6 +326,7 @@ function TeamForm({
 // ── 메인 페이지 ──────────────────────────────────────────────────────────
 
 function CampContent() {
+  const router = useRouter();
   const searchParams = useSearchParams();
   const hackathonFilter = searchParams.get('hackathon') ?? 'all';
 
@@ -319,6 +337,12 @@ function CampContent() {
   const [openOnly, setOpenOnly] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const [editTarget, setEditTarget] = useState<Team | undefined>(undefined);
+
+  // URL 파라미터 변경 감지 및 상태 동기화
+  useEffect(() => {
+    const h = searchParams.get('hackathon') ?? 'all';
+    setSelectedHackathon(h);
+  }, [searchParams]);
 
   // 데이터 로드 완료 후 teams 초기화
   useEffect(() => {
@@ -344,6 +368,18 @@ function CampContent() {
     setTeams(getTeams());
   }
 
+  // 필터 변경 핸들러: URL도 함께 업데이트
+  function handleHackathonChange(slug: string) {
+    setSelectedHackathon(slug);
+    const params = new URLSearchParams(searchParams.toString());
+    if (slug === 'all') {
+      params.delete('hackathon');
+    } else {
+      params.set('hackathon', slug);
+    }
+    router.push(`/camp?${params.toString()}`, { scroll: false });
+  }
+
   const filtered = useMemo(() => {
     return visibleTeams.filter((t) => {
       if (selectedHackathon !== 'all') {
@@ -363,7 +399,7 @@ function CampContent() {
   const hasFilter = selectedHackathon !== 'all' || positionFilter !== 'all' || openOnly;
 
   function resetFilters() {
-    setSelectedHackathon('all');
+    handleHackathonChange('all');
     setPositionFilter('all');
     setOpenOnly(false);
   }
@@ -414,7 +450,7 @@ function CampContent() {
         </div>
 
         <div className="flex flex-wrap items-center gap-3 mb-7 p-5 rounded-2xl bg-white border border-violet-100 shadow-sm">
-          <select value={selectedHackathon} onChange={(e) => setSelectedHackathon(e.target.value)}
+          <select value={selectedHackathon} onChange={(e) => handleHackathonChange(e.target.value)}
             className="text-sm px-3 py-1.5 rounded-lg cursor-pointer focus:outline-none"
             style={{ background: '#f5f3ff', color: '#64748b', border: '1px solid #e2e8f0' }}>
             <option value="all">전체 해커톤</option>

@@ -196,10 +196,7 @@ export const HACKATHON_DETAILS: Record<string, HackathonDetail> = {
           '배포 URL은 외부에서 접속 가능해야하며 심사 기간동안 접근 가능해야합니다.',
           '외부 API/외부 DB를 쓰는 경우에도 심사자가 별도 키 없이 확인 가능해야 합니다.',
         ],
-        links: {
-          rules: 'https://example.com/public/rules/daker-handover-202603',
-          faq: 'https://example.com/public/faq/daker-handover-202603',
-        },
+        links: {},
       },
       eval: {
         metricName: 'FinalScore',

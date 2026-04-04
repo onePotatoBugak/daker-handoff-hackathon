@@ -1,26 +1,56 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
+html { scroll-behavior: smooth; }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: #f8f7ff;
+  color: #1e1b4b;
+  font-family: var(--font-geist-sans), -apple-system, system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-track { background: #ede9fe; }
+::-webkit-scrollbar-thumb { background: #a78bfa; border-radius: 10px; }
+select option { background: #fff; color: #1e1b4b; }
+
+/* ── 블롭 floating 애니메이션 ── */
+@keyframes floatA {
+  0%, 100% { transform: translateY(0px) rotate(0deg) scale(1); }
+  33%       { transform: translateY(-22px) rotate(4deg) scale(1.03); }
+  66%       { transform: translateY(-10px) rotate(-3deg) scale(0.98); }
+}
+@keyframes floatB {
+  0%, 100% { transform: translateY(0px) rotate(0deg) scale(1); }
+  40%       { transform: translateY(-18px) rotate(-5deg) scale(1.04); }
+  75%       { transform: translateY(-8px) rotate(3deg) scale(0.97); }
+}
+@keyframes floatC {
+  0%, 100% { transform: translateY(0px) scale(1); }
+  50%       { transform: translateY(-26px) scale(1.05); }
+}
+@keyframes floatD {
+  0%, 100% { transform: translateY(0px) rotate(0deg); }
+  60%       { transform: translateY(-14px) rotate(6deg); }
+}
+
+.blob-float-a { animation: floatA 7s ease-in-out infinite; }
+.blob-float-b { animation: floatB 9s ease-in-out infinite; }
+.blob-float-c { animation: floatC 11s ease-in-out infinite; }
+.blob-float-d { animation: floatD 8s ease-in-out infinite; }
+.blob-float-e { animation: floatA 10s ease-in-out infinite reverse; }
+.blob-float-f { animation: floatB 6s ease-in-out infinite reverse; }
+
+/* ── 라이트 카드 ── */
+.light-card {
+  background: rgba(255,255,255,0.85);
+  border: 1px solid rgba(196,181,253,0.35);
+  border-radius: 1.25rem;
+  box-shadow: 0 2px 12px rgba(109,40,217,0.06), 0 1px 3px rgba(0,0,0,0.04);
+  transition: box-shadow 0.2s, transform 0.2s, border-color 0.2s;
+}
+.light-card:hover {
+  box-shadow: 0 8px 32px rgba(109,40,217,0.13);
+  border-color: rgba(167,139,250,0.55);
+  transform: translateY(-2px);
 }

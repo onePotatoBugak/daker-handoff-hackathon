@@ -93,6 +93,7 @@ export interface Team {
   teamCode: string;
   hackathonSlug: string;  // 빈 문자열 허용 — camp 폼에서 해커톤 없이 생성 가능
   name: string;
+  leaderName: string; // 추가된 필드
   isOpen: boolean;
   memberCount: number;
   lookingFor: string[];

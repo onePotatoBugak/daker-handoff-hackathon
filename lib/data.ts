@@ -291,9 +291,10 @@ export const HACKATHON_DETAILS: Record<string, HackathonDetail> = {
 
 export const SEED_TEAMS: Team[] = [
   {
-    teamCode: 'T-ALPHA',
-    hackathonSlug: 'aimers-8-model-lite',
+    teamCode: 'T-ALPHA-H',
+    hackathonSlug: 'daker-handover-2026-03',
     name: 'Team Alpha',
+    leaderName: '이강인',
     isOpen: true,
     memberCount: 3,
     lookingFor: ['Backend', 'ML Engineer'],
@@ -302,11 +303,24 @@ export const SEED_TEAMS: Team[] = [
     createdAt: '2026-02-20T11:00:00+09:00',
   },
   {
+    teamCode: 'T-ALPHA-A',
+    hackathonSlug: 'aimers-8-model-lite',
+    name: 'Team Alpha',
+    leaderName: '오미자',
+    isOpen: true,
+    memberCount: 3,
+    lookingFor: ['Backend', 'ML Engineer'],
+    intro: 'UI/UX 최적화/경량화 실험을 함께 진행할 팀원을 찾습니다.',
+    contact: { type: 'link', url: 'https://open.kakao.com/o/example1' },
+    createdAt: '2026-02-20T11:00:00+09:00',
+  },
+  {
     teamCode: 'T-BETA',
     hackathonSlug: 'monthly-vibe-coding-2026-02',
     name: 'PromptRunners',
+    leaderName: '차범근',
     isOpen: true,
-    memberCount: 1,
+    memberCount: 2,
     lookingFor: ['Frontend', 'Designer'],
     intro: '프롬프트 품질 점수화 + 개선 가이드 UX를 기획합니다.',
     contact: { type: 'link', url: 'https://forms.gle/example2' },
@@ -316,6 +330,7 @@ export const SEED_TEAMS: Team[] = [
     teamCode: 'T-HANDOVER-01',
     hackathonSlug: 'daker-handover-2026-03',
     name: '404found',
+    leaderName: '박지성',
     isOpen: true,
     memberCount: 3,
     lookingFor: ['Frontend', 'Designer'],
@@ -327,6 +342,7 @@ export const SEED_TEAMS: Team[] = [
     teamCode: 'T-HANDOVER-02',
     hackathonSlug: 'daker-handover-2026-03',
     name: 'LGTM',
+    leaderName: '손흥민',
     isOpen: false,
     memberCount: 5,
     lookingFor: [],
@@ -345,6 +361,31 @@ export const SEED_TEAMS: Team[] = [
     contact: { type: 'link', url: 'https://forms.gle/example5' },
     createdAt: '2026-03-05T09:10:00+09:00',
   },
+];
+
+// 초대 전용: 해커톤은 참여 중이지만 팀은 없는 순수 유저 데이터
+export const SEED_PARTICIPANTS = [
+  {
+    userId: 'U-KANGIN',
+    hackathonSlug: 'daker-handover-2026-03',
+    userName: '박상진',
+    position: 'Frontend Developer',
+    intro: '개인 참가 중입니다. 팀에 합류하고 싶어요!'
+  },
+  {
+    userId: 'U-MINJAE',
+    hackathonSlug: 'daker-handover-2026-03',
+    userName: '김민재',
+    position: 'Backend Developer',
+    intro: '서버 보안 및 아키텍처 설계 전문입니다.'
+  },
+  {
+    userId: 'U-HEECHAN',
+    hackathonSlug: 'aimers-8-model-lite',
+    userName: '황희찬',
+    position: 'ML Engineer',
+    intro: '경량화 모델 구현 경험이 많습니다.'
+  }
 ];
 
 // extraLeaderboards의 daker-handover-2026-03 데이터를 slug 기준으로 정규화

@@ -322,12 +322,7 @@ function TeamCard({
               연락하기<ExternalLink className="w-3 h-3" />
             </a>
             <button onClick={onApply}
-              disabled={disableAccept}
-              className={`text-xs px-3 py-1 rounded-lg font-semibold transition-all ${
-                disableAccept
-                  ? 'bg-slate-200 text-slate-400 cursor-not-allowed'
-                  : 'bg-violet-600 text-white hover:bg-violet-700'
-              }`}>
+              className="text-xs px-3 py-1 rounded-lg bg-violet-600 text-white hover:bg-violet-700 transition-all font-semibold">
               지원하기
             </button>
           </div>

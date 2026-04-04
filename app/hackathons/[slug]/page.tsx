@@ -137,6 +137,31 @@ function migrateLegacyArtifacts(
   return [];
 }
 
+function mergeParticipantTeams(
+  slug: string,
+  teams: Team[],
+  leaderboard: Leaderboard | null
+): Team[] {
+  const byName = new Map(teams.map((team) => [team.name, team]));
+
+  leaderboard?.entries.forEach((entry, index) => {
+    if (byName.has(entry.teamName)) return;
+    byName.set(entry.teamName, {
+      teamCode: `LB-${slug}-${index + 1}`,
+      hackathonSlug: slug,
+      name: entry.teamName,
+      isOpen: false,
+      memberCount: 0,
+      lookingFor: [],
+      intro: '리더보드 제출 기록으로 확인된 참가 팀입니다.',
+      contact: { type: 'link', url: '#' },
+      createdAt: entry.submittedAt,
+    });
+  });
+
+  return Array.from(byName.values());
+}
+
 function MilestoneTimeline({
   milestones,
 }: {
@@ -395,10 +420,12 @@ function LeaderboardSection({
   slug,
   note,
   leaderboard,
+  teams,
 }: {
   slug: string;
   note: string;
   leaderboard: Leaderboard | null;
+  teams: Team[];
 }) {
   const lb = leaderboard;
   const [localEntries, setLocalEntries] = useState<{ teamName: string; submittedAt: string }[]>([]);
@@ -411,8 +438,14 @@ function LeaderboardSection({
   const pendingEntries = localEntries.filter(
     (le) => !lb?.entries.some((e) => e.teamName === le.teamName)
   );
+  const participantOnlyTeams = teams.filter(
+    (team) =>
+      team.isLocal &&
+      !lb?.entries.some((entry) => entry.teamName === team.name) &&
+      !pendingEntries.some((entry) => entry.teamName === team.name)
+  );
 
-  if (!lb && pendingEntries.length === 0) {
+  if (!lb && pendingEntries.length === 0 && participantOnlyTeams.length === 0) {
     return (
       <EmptyState
         title="집계 중입니다"
@@ -508,6 +541,23 @@ function LeaderboardSection({
                 <td className="hidden md:table-cell" />
               </tr>
             ))}
+            {participantOnlyTeams.map((team) => (
+              <tr key={`team-${team.teamCode}`} className="hover:bg-sky-50/50 bg-sky-50/30 transition-colors">
+                <td className="py-3 px-4 text-slate-400">-</td>
+                <td className="py-3 px-4 font-semibold text-slate-800">
+                  <div className="flex items-center gap-2">
+                    {team.name}
+                    <span className="text-xs text-sky-600 border border-sky-200 bg-sky-50 px-1.5 py-0.5 rounded-full">참여중</span>
+                  </div>
+                </td>
+                <td className="py-3 px-4 text-right"><span className="text-xs text-slate-400">미제출</span></td>
+                {lb?.entries[0]?.scoreBreakdown && (<><td className="hidden sm:table-cell" /><td className="hidden sm:table-cell" /></>)}
+                <td className="py-3 px-4 text-right text-xs text-slate-400 hidden md:table-cell">
+                  {new Date(team.createdAt).toLocaleDateString('ko-KR')}
+                </td>
+                <td className="hidden md:table-cell" />
+              </tr>
+            ))}
           </tbody>
         </table>
       </div>
@@ -532,7 +582,10 @@ export default function HackathonDetailPage({
   const hackathon = data?.hackathon ?? null;
   const detail = data?.detail ?? null;
   const leaderboard = data?.leaderboard ?? null;
-  const filteredTeams: Team[] = data?.teams ?? [];
+  const filteredTeams = useMemo(
+    () => mergeParticipantTeams(slug, data?.teams ?? [], leaderboard),
+    [slug, data?.teams, leaderboard]
+  );
 
   if (loading) {
     return (
@@ -839,7 +892,7 @@ export default function HackathonDetailPage({
             {activeTab === 'leaderboard' && (
               <div className="space-y-4">
                 <h2 className="text-xl font-black text-slate-800">리더보드</h2>
-                <LeaderboardSection slug={slug} note={sections.leaderboard.note} leaderboard={leaderboard} />
+                <LeaderboardSection slug={slug} note={sections.leaderboard.note} leaderboard={leaderboard} teams={data?.teams ?? []} />
               </div>
             )}
         </div>

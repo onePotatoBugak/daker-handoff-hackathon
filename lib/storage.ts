@@ -69,7 +69,8 @@ export function getSubmissionBySlug(slug: string): LocalSubmission | null {
 }
 
 export function saveSubmission(
-  data: Omit<LocalSubmission, 'id' | 'savedAt'>
+  data: Omit<LocalSubmission, 'id' | 'savedAt'>,
+  options?: { teamName?: string }
 ): LocalSubmission {
   const submissions = getSubmissions();
   const existingIdx = submissions.findIndex(
@@ -101,7 +102,7 @@ export function saveSubmission(
     );
     addLocalLeaderboardEntry({
       hackathonSlug: data.hackathonSlug,
-      teamName: localTeam?.name ?? '나의 제출',
+      teamName: options?.teamName ?? localTeam?.name ?? '나의 제출',
       submittedAt: submission.submittedAt ?? new Date().toISOString(),
     });
   }

@@ -392,7 +392,11 @@ function TeamsSection({
 
   const myTeam = filteredTeams.find((t) => t.isLocal);
   const otherTeams = filteredTeams.filter((t) => !t.isLocal);
-  const invitableTeams = otherTeams.filter((t) => !actions[t.teamCode]);
+  // 초대 가능: 아직 액션 없음, 또는 거절 후 다시 초대(데모/재테스트용). invited/applied/accepted 는 제외.
+  const invitableTeams = otherTeams.filter((t) => {
+    const a = actions[t.teamCode] ?? null;
+    return a === null || a === 'rejected';
+  });
 
   return (
     <div className="space-y-4">
@@ -1053,6 +1057,7 @@ export default function HackathonDetailPage({
 
             {activeTab === 'teams' && (
               <TeamsSection
+                key={slug}
                 slug={slug}
                 hackathonStatus={hackathon.status}
                 filteredTeams={filteredTeams}

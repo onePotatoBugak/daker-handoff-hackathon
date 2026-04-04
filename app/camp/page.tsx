@@ -327,13 +327,25 @@ function CampContent() {
 
   const hackathons = data?.hackathons ?? [];
   const positions = data?.positions ?? [];
+  const availableHackathons = useMemo(
+    () => hackathons.filter((hackathon) => hackathon.status !== 'ended'),
+    [hackathons]
+  );
+  const endedHackathonSlugs = useMemo(
+    () => new Set(hackathons.filter((hackathon) => hackathon.status === 'ended').map((hackathon) => hackathon.slug)),
+    [hackathons]
+  );
+  const visibleTeams = useMemo(
+    () => teams.filter((team) => !team.hackathonSlug || !endedHackathonSlugs.has(team.hackathonSlug)),
+    [teams, endedHackathonSlugs]
+  );
 
   function refreshTeams() {
     setTeams(getTeams());
   }
 
   const filtered = useMemo(() => {
-    return teams.filter((t) => {
+    return visibleTeams.filter((t) => {
       if (selectedHackathon !== 'all') {
         if (selectedHackathon === 'none') {
           if (t.hackathonSlug) return false;
@@ -346,7 +358,7 @@ function CampContent() {
       if (openOnly && !t.isOpen) return false;
       return true;
     });
-  }, [teams, selectedHackathon, positionFilter, openOnly]);
+  }, [visibleTeams, selectedHackathon, positionFilter, openOnly]);
 
   const hasFilter = selectedHackathon !== 'all' || positionFilter !== 'all' || openOnly;
 
@@ -390,7 +402,7 @@ function CampContent() {
             <p className="text-xs text-violet-400 uppercase tracking-[0.3em] font-bold mb-2">TEAM FINDER</p>
             <h1 className="text-4xl font-black text-slate-800">팀 찾기</h1>
             <p className="text-slate-500 text-sm mt-1.5">
-              총 <span className="text-violet-700 font-semibold">{teams.length}개</span> 팀 ·
+              총 <span className="text-violet-700 font-semibold">{visibleTeams.length}개</span> 팀 ·
               조건에 맞는 <span className="text-violet-700 font-semibold">{filtered.length}개</span> 표시 중
             </p>
           </div>
@@ -407,7 +419,7 @@ function CampContent() {
             style={{ background: '#f5f3ff', color: '#64748b', border: '1px solid #e2e8f0' }}>
             <option value="all">전체 해커톤</option>
             <option value="none">해커톤 미연결</option>
-            {hackathons.map((h) => <option key={h.slug} value={h.slug}>{h.title}</option>)}
+            {availableHackathons.map((h) => <option key={h.slug} value={h.slug}>{h.title}</option>)}
           </select>
 
           <select value={positionFilter} onChange={(e) => setPositionFilter(e.target.value)}

@@ -79,7 +79,9 @@ export interface HackathonDetail {
       submissionItems?: Array<{
         key: string;
         title: string;
-        format: string;
+        kind: 'file';
+        accept: string[];
+        description?: string;
       }>;
     };
     leaderboard: {
@@ -130,6 +132,15 @@ export interface Leaderboard {
 export interface LocalSubmission {
   id: string;
   hackathonSlug: string;
+  artifacts?: Array<{
+    key: string;
+    title: string;
+    fileName: string;
+    fileSize: number;
+    mimeType: string;
+    lastModified: number;
+    accept: string[];
+  }>;
   plan?: string;
   url?: string;
   pdfUrl?: string;

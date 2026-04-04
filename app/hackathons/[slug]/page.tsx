@@ -22,7 +22,50 @@ import {
   X,
   UserPlus,
   XCircle,
+  Loader2,
 } from 'lucide-react';
+
+// ── InviteResultPopup: 초대 결과 알림 팝업 ───────────────────────────────────
+
+function InviteResultPopup({
+  status,
+  targetName,
+  onClose,
+}: {
+  status: 'accepted' | 'rejected';
+  targetName: string;
+  onClose: () => void;
+}) {
+  return (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm">
+      <div className="bg-white rounded-2xl p-8 shadow-2xl max-w-sm w-full text-center animate-in fade-in zoom-in duration-300">
+        {status === 'accepted' ? (
+          <div className="py-2">
+            <div className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <CheckCircle className="w-8 h-8 text-emerald-600" />
+            </div>
+            <h2 className="text-xl font-bold text-slate-800 mb-2">초대 수락!</h2>
+            <p className="text-slate-500 text-sm mb-6">{targetName}님이 초대를 수락하여 팀에 합류했습니다. 환영합니다! 🎉</p>
+            <button onClick={onClose} className="w-full py-3 bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded-xl transition-all">
+              확인
+            </button>
+          </div>
+        ) : (
+          <div className="py-2">
+            <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <XCircle className="w-8 h-8 text-red-600" />
+            </div>
+            <h2 className="text-xl font-bold text-slate-800 mb-2">초대 거절</h2>
+            <p className="text-slate-500 text-sm mb-6">아쉽게도 {targetName}님이 지금은 팀에 합류하기 어렵다고 전해왔습니다.</p>
+            <button onClick={onClose} className="w-full py-3 bg-slate-800 hover:bg-slate-900 text-white font-bold rounded-xl transition-all">
+              닫기
+            </button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
 import Navbar from '@/components/Navbar';
 import StatusBadge from '@/components/StatusBadge';
 import CountdownTimer from '@/components/CountdownTimer';
@@ -39,6 +82,7 @@ import {
   setTeamAction,
 } from '@/lib/storage';
 import type { TeamAction } from '@/lib/storage';
+import { SEED_PARTICIPANTS } from '@/lib/data'; // ⭐️ 신규 참가자 데이터 임포트
 import type { Team, LocalSubmission, HackathonDetail, HackathonStatus, Leaderboard } from '@/lib/types';
 
 type TabKey =
@@ -197,6 +241,7 @@ function TeamCard({
   onApply,
   onAccept,
   onReject,
+  hasMyTeam, // 추가된 prop
 }: {
   team: Team;
   hackathonStatus: HackathonStatus;
@@ -204,14 +249,18 @@ function TeamCard({
   onApply: () => void;
   onAccept: () => void;
   onReject: () => void;
+  hasMyTeam: boolean; // 추가된 prop
 }) {
   const isEnded = hackathonStatus === 'ended';
   const isPending = action === 'invited' || action === 'applied';
 
   return (
-    <div className={`light-card p-4 transition-all ${action === 'invited' ? 'ring-2 ring-violet-300' : ''}`}>
+    <div className={`light-card p-4 transition-all ${team.isLocal ? 'border-violet-300 bg-violet-50/30' : ''}`}>
       <div className="flex items-start justify-between mb-2">
-        <h3 className="font-semibold text-slate-800">{team.name}</h3>
+        <div className="flex items-center gap-2 flex-wrap">
+          <h3 className="font-semibold text-slate-800">{team.name}</h3>
+          {team.isLocal && <span className="text-[10px] px-1.5 py-0.5 rounded-md bg-violet-600 text-white font-bold">내 팀</span>}
+        </div>
         {hackathonStatus !== 'ended' && (
           <span className={`text-xs px-2 py-0.5 rounded-full font-semibold border ${
             team.isOpen ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-slate-100 text-slate-400 border-slate-200'
@@ -220,14 +269,6 @@ function TeamCard({
           </span>
         )}
       </div>
-
-      {/* 초대 배너 */}
-      {action === 'invited' && (
-        <div className="flex items-center gap-1.5 text-xs font-semibold text-violet-700 bg-violet-50 border border-violet-200 rounded-lg px-3 py-1.5 mb-3">
-          <UserPlus className="w-3.5 h-3.5 shrink-0" />
-          이 팀에서 초대가 왔습니다
-        </div>
-      )}
 
       <p className="text-sm text-slate-500 mb-3 leading-relaxed">{team.intro}</p>
       <div className="flex flex-wrap gap-1.5 mb-3">
@@ -243,6 +284,9 @@ function TeamCard({
         {isEnded ? (
           <span className="text-xs text-slate-400">해커톤 종료</span>
 
+        ) : team.isLocal ? (
+          <span className="text-xs text-violet-500 font-bold italic">우리 팀 관리 중</span>
+
         ) : action === 'accepted' ? (
           <span className="inline-flex items-center gap-1 text-xs font-bold text-emerald-600 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-full">
             <CheckCircle className="w-3 h-3" />합류 완료
@@ -253,13 +297,16 @@ function TeamCard({
             <XCircle className="w-3 h-3" />거절됨
           </span>
 
-        ) : isPending ? (
+        ) : hasMyTeam ? ( // ⭐️ 최우선 순위: 내가 팀이 있다면 다른 팀은 무조건 '지원 불가' 상태 유지
+          <span className="text-xs text-slate-300">지원 불가</span>
+
+        ) : isPending ? ( // 내가 팀이 없을 때만 (지원했거나 초대받았을 때) 노출
           <div className="flex items-center gap-2">
-            <span className="text-xs text-amber-500 font-medium">
+            <span className="text-xs text-amber-500 font-bold">
               {action === 'invited' ? '초대 대기 중' : '지원 검토 중'}
             </span>
             <button onClick={onAccept}
-              className="flex items-center gap-1 text-xs px-2.5 py-1 rounded-lg bg-emerald-500 text-white font-semibold hover:bg-emerald-600 transition-all">
+              className="flex items-center gap-1 text-xs px-2.5 py-1 rounded-lg bg-emerald-500 text-white font-semibold hover:bg-emerald-600 transition-all shadow-sm">
               <CheckCircle className="w-3 h-3" />수락
             </button>
             <button onClick={onReject}
@@ -268,7 +315,7 @@ function TeamCard({
             </button>
           </div>
 
-        ) : team.isOpen ? (
+        ) : team.isOpen ? ( // 내가 팀이 없고 초대/지원 상태도 아닐 때만 '지원하기' 노출
           <div className="flex gap-2">
             <a href={team.contact.url} target="_blank" rel="noopener noreferrer"
               className="flex items-center gap-1 text-xs text-slate-500 hover:text-violet-600 underline transition-colors">
@@ -279,7 +326,6 @@ function TeamCard({
               지원하기
             </button>
           </div>
-
         ) : (
           <span className="text-xs text-slate-400">팀 모집 마감</span>
         )}
@@ -292,13 +338,13 @@ function TeamCard({
 function MyTeamCompositionCard({
   team,
   hackathonStatus,
-  invitableTeams,
+  invitableUsers,
   onInvite,
 }: {
   team: Team;
   hackathonStatus: HackathonStatus;
-  invitableTeams: Team[];
-  onInvite: (teamCode: string) => void;
+  invitableUsers: typeof SEED_PARTICIPANTS;
+  onInvite: (userId: string, userName: string) => void;
 }) {
   const [showMenu, setShowMenu] = useState(false);
 
@@ -340,17 +386,20 @@ function MyTeamCompositionCard({
 
       {showMenu && (
         <div className="mt-4 border-t border-violet-100 pt-3 space-y-2">
-          <p className="text-xs font-semibold text-slate-500 mb-1">초대할 팀을 선택하세요</p>
-          {invitableTeams.length === 0 ? (
-            <p className="text-xs text-slate-400 py-2">초대 가능한 팀이 없습니다.</p>
+          <p className="text-xs font-semibold text-slate-500 mb-1">초대할 참가자를 선택하세요</p>
+          {invitableUsers.length === 0 ? (
+            <p className="text-xs text-slate-400 py-2">초대 가능한 참가자가 없습니다.</p>
           ) : (
-            invitableTeams.map((t) => (
+            invitableUsers.map((u) => (
               <button
-                key={t.teamCode}
-                onClick={() => { onInvite(t.teamCode); setShowMenu(false); }}
+                key={u.userId}
+                onClick={() => { onInvite(u.userId, u.userName); }} // setShowMenu(false) 삭제하여 목록 유지
                 className="w-full flex items-center justify-between text-left text-xs px-3 py-2 rounded-lg bg-white border border-violet-100 hover:border-violet-300 hover:bg-violet-50 transition-all"
               >
-                <span className="font-semibold text-slate-700">{t.name}</span>
+                <div className="flex flex-col">
+                  <span className="font-bold text-slate-800">{u.userName}</span>
+                  <span className="text-[10px] text-slate-400">{u.position}</span>
+                </div>
                 <span className="text-violet-500 font-semibold flex items-center gap-1">
                   <UserPlus className="w-3 h-3" />초대 발송
                 </span>
@@ -369,32 +418,42 @@ function TeamsSection({
   hackathonStatus,
   filteredTeams,
   onNavigate,
+  onInvite,
 }: {
   slug: string;
   hackathonStatus: HackathonStatus;
   filteredTeams: Team[];
   onNavigate: (path: string) => void;
+  onInvite: (name: string, code: string) => void; // 이름도 전달하도록 수정
 }) {
   const [actions, setActions] = useState<Record<string, TeamAction | null>>(() => {
     const init: Record<string, TeamAction | null> = {};
     filteredTeams.forEach((t) => {
       init[t.teamCode] = getTeamAction(t.teamCode);
     });
+    // 참가자들에 대해서도 액션 초기화
+    SEED_PARTICIPANTS.forEach((p) => {
+      init[p.userId] = getTeamAction(p.userId);
+    });
     return init;
   });
 
-  function updateAction(teamCode: string, action: TeamAction | null) {
-    setTeamAction(teamCode, action);
-    setActions((prev) => ({ ...prev, [teamCode]: action }));
+  function updateAction(code: string, action: TeamAction | null) {
+    setTeamAction(code, action);
+    setActions((prev) => ({ ...prev, [code]: action }));
   }
 
   const myTeam = filteredTeams.find((t) => t.isLocal);
-  const otherTeams = filteredTeams.filter((t) => !t.isLocal);
-  // 초대 가능: 아직 액션 없음, 또는 거절 후 다시 초대(데모/재테스트용). invited/applied/accepted 는 제외.
-  const invitableTeams = otherTeams.filter((t) => {
-    const a = actions[t.teamCode] ?? null;
+  
+  // 초대 가능: SEED_PARTICIPANTS 중 이 해커톤 소속 유저 + 거절하지 않은 유저
+  const invitableUsers = SEED_PARTICIPANTS.filter((p) => {
+    if (p.hackathonSlug !== slug) return false;
+    const a = actions[p.userId] ?? null;
     return a === null || a === 'rejected';
   });
+
+  // 메인 카드 목록: 모든 팀 표시 (이제 1인 참가자는 팀 데이터에 없으므로 자동 필터링됨)
+  const teamCardsToShow = filteredTeams;
 
   return (
     <div className="space-y-4">
@@ -410,12 +469,15 @@ function TeamsSection({
         <MyTeamCompositionCard
           team={myTeam}
           hackathonStatus={hackathonStatus}
-          invitableTeams={invitableTeams}
-          onInvite={(teamCode) => updateAction(teamCode, 'invited')}
+          invitableUsers={invitableUsers} // 이름 변경
+          onInvite={(userId, userName) => {
+            updateAction(userId, 'invited');
+            onInvite(userName, userId);
+          }}
         />
       )}
 
-      {filteredTeams.length === 0 ? (
+      {teamCardsToShow.length === 0 ? (
         <EmptyState
           title="등록된 팀이 없습니다"
           description="아직 이 해커톤에 팀을 만든 참가자가 없습니다."
@@ -423,7 +485,7 @@ function TeamsSection({
         />
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-          {filteredTeams.map((t) => (
+          {teamCardsToShow.map((t) => (
             <TeamCard
               key={t.teamCode}
               team={t}
@@ -432,6 +494,7 @@ function TeamsSection({
               onApply={() => updateAction(t.teamCode, 'applied')}
               onAccept={() => updateAction(t.teamCode, 'accepted')}
               onReject={() => updateAction(t.teamCode, 'rejected')}
+              hasMyTeam={!!myTeam}
             />
           ))}
         </div>
@@ -863,15 +926,65 @@ export default function HackathonDetailPage({
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<TabKey>('overview');
 
+  // 초대 결과 팝업 상태
+  const [inviteResult, setInviteResult] = useState<{
+    show: boolean;
+    status: 'accepted' | 'rejected';
+    targetName: string;
+  }>({ show: false, status: 'accepted', targetName: '' });
+
+  // 하단 토스트 상태
+  const [showToast, setShowToast] = useState(false);
+
   const { data, loading, error, retry } = useAsync(() => fetchHackathonDetail(slug));
+  const [teams, setTeams] = useState<Team[]>([]);
+
+  useEffect(() => {
+    if (data?.teams) {
+      const merged = mergeParticipantTeams(slug, data.teams, data.leaderboard);
+      setTeams(merged);
+    }
+  }, [slug, data]);
 
   const hackathon = data?.hackathon ?? null;
   const detail = data?.detail ?? null;
   const leaderboard = data?.leaderboard ?? null;
-  const filteredTeams = useMemo(
-    () => mergeParticipantTeams(slug, data?.teams ?? [], leaderboard),
-    [slug, data?.teams, leaderboard]
-  );
+  
+  const filteredTeams = useMemo(() => teams, [teams]);
+
+  function handleInvite(userName: string, userId: string) {
+    // 1. 즉시 하단 토스트 표시
+    setInviteResult(prev => ({ ...prev, targetName: userName, show: false })); // 이전 팝업 닫기 및 이름 설정
+    setShowToast(true);
+
+    // 2. 5초 후 결과 결정 및 팝업 표시
+    setTimeout(() => {
+      setShowToast(false); // 토스트 숨기기
+      
+      const isAccepted = Math.random() > 0.5;
+      const finalStatus = isAccepted ? 'accepted' : 'rejected';
+      
+      setInviteResult({ show: true, status: finalStatus, targetName: userName });
+
+      if (isAccepted) {
+        const myTeam = teams.find(t => t.isLocal && t.hackathonSlug === slug);
+        if (myTeam) {
+          const newMemberCount = myTeam.memberCount + 1;
+          const newIsOpen = newMemberCount >= 5 ? false : myTeam.isOpen;
+          
+          setTeams(prevTeams => prevTeams.map(t => 
+            t.teamCode === myTeam.teamCode 
+              ? { ...t, memberCount: newMemberCount, isOpen: newIsOpen } 
+              : t
+          ));
+          
+          import('@/lib/storage').then(m => {
+            m.updateTeam(myTeam.teamCode, { memberCount: newMemberCount, isOpen: newIsOpen });
+          });
+        }
+      }
+    }, 5000);
+  }
 
   if (loading) {
     return (
@@ -1153,6 +1266,7 @@ export default function HackathonDetailPage({
                 hackathonStatus={hackathon.status}
                 filteredTeams={filteredTeams}
                 onNavigate={(path) => router.push(path)}
+                onInvite={handleInvite}
               />
             )}
 
@@ -1178,6 +1292,26 @@ export default function HackathonDetailPage({
             )}
         </div>
       </main>
+
+      {inviteResult.show && (
+        <InviteResultPopup
+          status={inviteResult.status}
+          targetName={inviteResult.targetName}
+          onClose={() => setInviteResult(prev => ({ ...prev, show: false }))}
+        />
+      )}
+
+      {/* 하단 토스트 알림 */}
+      {showToast && (
+        <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-[100] animate-in fade-in slide-in-from-bottom-4 duration-300">
+          <div className="bg-slate-800 text-white px-6 py-3 rounded-2xl shadow-2xl flex items-center gap-3 border border-slate-700">
+            <div className="w-5 h-5 bg-emerald-500 rounded-full flex items-center justify-center">
+              <CheckCircle className="w-3 h-3 text-white" />
+            </div>
+            <span className="text-sm font-bold">초대가 완료되었습니다.</span>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

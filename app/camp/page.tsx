@@ -52,13 +52,14 @@ function TeamCard({
       <div className="flex items-start justify-between mb-3">
         <div className="flex-1 min-w-0 pr-2">
           <h3 className="font-bold text-slate-800 text-base truncate">{team.name}</h3>
+          <p className="text-xs text-slate-500 mt-0.5">팀장: {team.leaderName}</p>
           {hackathon ? (
             <Link href={`/hackathons/${hackathon.slug}`}
-              className="text-xs text-violet-500 hover:text-violet-700 underline mt-0.5 block truncate">
+              className="text-xs text-violet-500 hover:text-violet-700 underline mt-1 block truncate">
               {hackathon.title}
             </Link>
           ) : (
-            <span className="text-xs text-slate-400 mt-0.5 block">해커톤 미연결</span>
+            <span className="text-xs text-slate-400 mt-1 block">해커톤 미연결</span>
           )}
         </div>
         <div className="flex flex-col items-end gap-1 shrink-0">
@@ -155,6 +156,7 @@ function TeamForm({
   const isEdit = !!editTarget;
   const [form, setForm] = useState({
     name: editTarget?.name ?? '',
+    leaderName: editTarget?.leaderName ?? '',
     hackathonSlug: editTarget?.hackathonSlug ?? defaultHackathon ?? '',
     intro: editTarget?.intro ?? '',
     lookingFor: editTarget?.lookingFor ?? ([] as string[]),
@@ -176,6 +178,7 @@ function TeamForm({
   function validate(): boolean {
     const errs: Record<string, string> = {};
     if (!form.name.trim()) errs.name = '팀 이름을 입력해주세요.';
+    if (!form.leaderName.trim()) errs.leaderName = '팀장 이름을 입력해주세요.';
     if (!form.intro.trim()) errs.intro = '팀 소개를 입력해주세요.';
     if (!form.contactUrl.trim()) errs.contactUrl = '연락처 URL을 입력해주세요.';
     setErrors(errs);
@@ -189,6 +192,7 @@ function TeamForm({
     if (isEdit && editTarget) {
       updateTeam(editTarget.teamCode, {
         name: form.name.trim(),
+        leaderName: form.leaderName.trim(),
         hackathonSlug: form.hackathonSlug || '',
         intro: form.intro.trim(),
         lookingFor: form.lookingFor,
@@ -200,6 +204,7 @@ function TeamForm({
       addTeam({
         hackathonSlug: form.hackathonSlug || '',
         name: form.name.trim(),
+        leaderName: form.leaderName.trim(),
         isOpen: form.isOpen,
         memberCount: form.memberCount,
         lookingFor: form.lookingFor,
@@ -233,6 +238,17 @@ function TeamForm({
               placeholder="팀 이름을 입력하세요"
               className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:border-violet-400 focus:ring-1 focus:ring-violet-100" />
             {errors.name && <p className="text-xs text-red-500 mt-1">{errors.name}</p>}
+          </div>
+
+          <div>
+            <label className="block text-sm font-semibold text-slate-700 mb-1.5">
+              팀장 이름 (닉네임) <span className="text-red-500">*</span>
+            </label>
+            <input type="text" value={form.leaderName}
+              onChange={(e) => setForm((p) => ({ ...p, leaderName: e.target.value }))}
+              placeholder="팀장 이름을 입력하세요"
+              className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:border-violet-400 focus:ring-1 focus:ring-violet-100" />
+            {errors.leaderName && <p className="text-xs text-red-500 mt-1">{errors.leaderName}</p>}
           </div>
 
           <div>

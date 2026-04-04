@@ -22,9 +22,10 @@ import {
   X,
   BookOpen,
   HelpCircle,
+  UserPlus,
+  XCircle,
 } from 'lucide-react';
 import Navbar from '@/components/Navbar';
-import InfoPanel from '@/components/InfoPanel';
 import StatusBadge from '@/components/StatusBadge';
 import CountdownTimer from '@/components/CountdownTimer';
 import EmptyState from '@/components/EmptyState';
@@ -39,6 +40,7 @@ import {
   getTeamAction,
   setTeamAction,
 } from '@/lib/storage';
+import type { TeamAction } from '@/lib/storage';
 import type { Team, LocalSubmission, HackathonDetail, HackathonStatus, Leaderboard } from '@/lib/types';
 
 type TabKey =
@@ -190,21 +192,26 @@ function MilestoneTimeline({
   );
 }
 
-function TeamCard({ team, hackathonStatus }: { team: Team; hackathonStatus: HackathonStatus }) {
-  const [action, setAction] = useState<'applied' | 'accepted' | null>(() => getTeamAction(team.teamCode));
-
-  function handleApply() {
-    if (action === 'applied') {
-      setTeamAction(team.teamCode, null);
-      setAction(null);
-    } else {
-      setTeamAction(team.teamCode, 'applied');
-      setAction('applied');
-    }
-  }
+function TeamCard({
+  team,
+  hackathonStatus,
+  action,
+  onApply,
+  onAccept,
+  onReject,
+}: {
+  team: Team;
+  hackathonStatus: HackathonStatus;
+  action: TeamAction | null;
+  onApply: () => void;
+  onAccept: () => void;
+  onReject: () => void;
+}) {
+  const isEnded = hackathonStatus === 'ended';
+  const isPending = action === 'invited' || action === 'applied';
 
   return (
-    <div className="light-card p-4">
+    <div className={`light-card p-4 transition-all ${action === 'invited' ? 'ring-2 ring-violet-300' : ''}`}>
       <div className="flex items-start justify-between mb-2">
         <h3 className="font-semibold text-slate-800">{team.name}</h3>
         {hackathonStatus !== 'ended' && (
@@ -215,6 +222,15 @@ function TeamCard({ team, hackathonStatus }: { team: Team; hackathonStatus: Hack
           </span>
         )}
       </div>
+
+      {/* 초대 배너 */}
+      {action === 'invited' && (
+        <div className="flex items-center gap-1.5 text-xs font-semibold text-violet-700 bg-violet-50 border border-violet-200 rounded-lg px-3 py-1.5 mb-3">
+          <UserPlus className="w-3.5 h-3.5 shrink-0" />
+          이 팀에서 초대가 왔습니다
+        </div>
+      )}
+
       <p className="text-sm text-slate-500 mb-3 leading-relaxed">{team.intro}</p>
       <div className="flex flex-wrap gap-1.5 mb-3">
         {team.lookingFor.map((pos) => (
@@ -222,27 +238,206 @@ function TeamCard({ team, hackathonStatus }: { team: Team; hackathonStatus: Hack
         ))}
         {team.lookingFor.length === 0 && <span className="text-xs text-slate-400">모집 포지션 없음</span>}
       </div>
-      <div className="flex items-center justify-between">
+
+      <div className="flex items-center justify-between min-h-[28px]">
         <span className="text-xs text-slate-400">현재 {team.memberCount}명</span>
-        {hackathonStatus === 'ended' ? (
+
+        {isEnded ? (
           <span className="text-xs text-slate-400">해커톤 종료</span>
+
+        ) : action === 'accepted' ? (
+          <span className="inline-flex items-center gap-1 text-xs font-bold text-emerald-600 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-full">
+            <CheckCircle className="w-3 h-3" />합류 완료
+          </span>
+
+        ) : action === 'rejected' ? (
+          <span className="inline-flex items-center gap-1 text-xs font-medium text-red-500 bg-red-50 border border-red-200 px-2.5 py-1 rounded-full">
+            <XCircle className="w-3 h-3" />거절됨
+          </span>
+
+        ) : isPending ? (
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-amber-500 font-medium">
+              {action === 'invited' ? '초대 대기 중' : '지원 검토 중'}
+            </span>
+            <button onClick={onAccept}
+              className="flex items-center gap-1 text-xs px-2.5 py-1 rounded-lg bg-emerald-500 text-white font-semibold hover:bg-emerald-600 transition-all">
+              <CheckCircle className="w-3 h-3" />수락
+            </button>
+            <button onClick={onReject}
+              className="flex items-center gap-1 text-xs px-2.5 py-1 rounded-lg bg-red-100 text-red-600 font-semibold hover:bg-red-200 transition-all">
+              <XCircle className="w-3 h-3" />거절
+            </button>
+          </div>
+
         ) : team.isOpen ? (
           <div className="flex gap-2">
             <a href={team.contact.url} target="_blank" rel="noopener noreferrer"
               className="flex items-center gap-1 text-xs text-slate-500 hover:text-violet-600 underline transition-colors">
               연락하기<ExternalLink className="w-3 h-3" />
             </a>
-            <button onClick={handleApply}
-              className={`text-xs px-3 py-1 rounded-lg transition-all font-semibold ${
-                action === 'applied' ? 'bg-emerald-500 text-white' : 'bg-violet-600 text-white hover:bg-violet-700'
-              }`}>
-              {action === 'applied' ? '지원완료 ✓' : '지원하기'}
+            <button onClick={onApply}
+              className="text-xs px-3 py-1 rounded-lg bg-violet-600 text-white hover:bg-violet-700 transition-all font-semibold">
+              지원하기
             </button>
           </div>
+
         ) : (
           <span className="text-xs text-slate-400">팀 모집 마감</span>
         )}
       </div>
+    </div>
+  );
+}
+
+/* ── MyTeamCompositionCard: 팀 선택 초대 흐름 ── */
+function MyTeamCompositionCard({
+  team,
+  hackathonStatus,
+  invitableTeams,
+  onInvite,
+}: {
+  team: Team;
+  hackathonStatus: HackathonStatus;
+  invitableTeams: Team[];
+  onInvite: (teamCode: string) => void;
+}) {
+  const [showMenu, setShowMenu] = useState(false);
+
+  return (
+    <div className="rounded-2xl p-5" style={{ background: 'rgba(109,40,217,0.05)', border: '1.5px solid rgba(109,40,217,0.2)' }}>
+      <div className="flex items-center gap-3 mb-4">
+        <div className="w-9 h-9 rounded-xl flex items-center justify-center"
+          style={{ background: 'linear-gradient(135deg, #7c3aed, #4f46e5)' }}>
+          <Users className="w-4 h-4 text-white" />
+        </div>
+        <div>
+          <h3 className="text-sm font-black text-violet-900">이 해커톤 팀 구성</h3>
+          <p className="text-xs text-violet-400 mt-0.5">내 팀 · {team.name}</p>
+        </div>
+      </div>
+
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <span className="text-xs text-slate-500">
+            현재 <span className="font-bold text-slate-700">{team.memberCount}명</span>
+          </span>
+          <span className={`text-xs font-semibold px-2 py-0.5 rounded-full border ${
+            team.isOpen ? 'text-emerald-600 bg-emerald-50 border-emerald-200' : 'text-slate-400 bg-slate-100 border-slate-200'
+          }`}>
+            {team.isOpen ? '모집 중' : '모집 마감'}
+          </span>
+        </div>
+
+        {hackathonStatus !== 'ended' && (
+          <button
+            onClick={() => setShowMenu((v) => !v)}
+            className="flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-xl transition-all"
+            style={{ background: 'linear-gradient(135deg, #7c3aed, #4f46e5)', color: 'white' }}
+          >
+            <UserPlus className="w-3.5 h-3.5" />초대하기
+          </button>
+        )}
+      </div>
+
+      {showMenu && (
+        <div className="mt-4 border-t border-violet-100 pt-3 space-y-2">
+          <p className="text-xs font-semibold text-slate-500 mb-1">초대할 팀을 선택하세요</p>
+          {invitableTeams.length === 0 ? (
+            <p className="text-xs text-slate-400 py-2">초대 가능한 팀이 없습니다.</p>
+          ) : (
+            invitableTeams.map((t) => (
+              <button
+                key={t.teamCode}
+                onClick={() => { onInvite(t.teamCode); setShowMenu(false); }}
+                className="w-full flex items-center justify-between text-left text-xs px-3 py-2 rounded-lg bg-white border border-violet-100 hover:border-violet-300 hover:bg-violet-50 transition-all"
+              >
+                <span className="font-semibold text-slate-700">{t.name}</span>
+                <span className="text-violet-500 font-semibold flex items-center gap-1">
+                  <UserPlus className="w-3 h-3" />초대 발송
+                </span>
+              </button>
+            ))
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ── TeamsSection: 팀 액션 상태 통합 관리 ── */
+function TeamsSection({
+  slug,
+  hackathonStatus,
+  filteredTeams,
+  onNavigate,
+}: {
+  slug: string;
+  hackathonStatus: HackathonStatus;
+  filteredTeams: Team[];
+  onNavigate: (path: string) => void;
+}) {
+  const [actions, setActions] = useState<Record<string, TeamAction | null>>(() => {
+    const init: Record<string, TeamAction | null> = {};
+    filteredTeams.forEach((t) => {
+      init[t.teamCode] = getTeamAction(t.teamCode);
+    });
+    return init;
+  });
+
+  function updateAction(teamCode: string, action: TeamAction | null) {
+    setTeamAction(teamCode, action);
+    setActions((prev) => ({ ...prev, [teamCode]: action }));
+  }
+
+  const myTeam = filteredTeams.find((t) => t.isLocal);
+  const otherTeams = filteredTeams.filter((t) => !t.isLocal);
+  // 초대 가능: 아직 액션 없음, 또는 거절 후 다시 초대(데모/재테스트용). invited/applied/accepted 는 제외.
+  const invitableTeams = otherTeams.filter((t) => {
+    const a = actions[t.teamCode] ?? null;
+    return a === null || a === 'rejected';
+  });
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <h2 className="text-xl font-black text-slate-800">참여 팀</h2>
+        <Link href={`/camp?hackathon=${slug}`}
+          className="flex items-center gap-1.5 text-sm font-semibold px-4 py-2 rounded-xl transition-all hover:scale-105 bg-violet-50 text-violet-700 border border-violet-200">
+          <Users className="w-3.5 h-3.5" />팀 모집 페이지
+        </Link>
+      </div>
+
+      {myTeam && (
+        <MyTeamCompositionCard
+          team={myTeam}
+          hackathonStatus={hackathonStatus}
+          invitableTeams={invitableTeams}
+          onInvite={(teamCode) => updateAction(teamCode, 'invited')}
+        />
+      )}
+
+      {filteredTeams.length === 0 ? (
+        <EmptyState
+          title="등록된 팀이 없습니다"
+          description="아직 이 해커톤에 팀을 만든 참가자가 없습니다."
+          action={{ label: '팀 만들기', onClick: () => onNavigate(`/camp?hackathon=${slug}`) }}
+        />
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          {filteredTeams.map((t) => (
+            <TeamCard
+              key={t.teamCode}
+              team={t}
+              hackathonStatus={hackathonStatus}
+              action={actions[t.teamCode] ?? null}
+              onApply={() => updateAction(t.teamCode, 'applied')}
+              onAccept={() => updateAction(t.teamCode, 'accepted')}
+              onReject={() => updateAction(t.teamCode, 'rejected')}
+            />
+          ))}
+        </div>
+      )}
     </div>
   );
 }
@@ -576,8 +771,6 @@ export default function HackathonDetailPage({
   const { slug } = use(params);
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<TabKey>('overview');
-  const [panelOpen, setPanelOpen] = useState(false);
-  const [panelType, setPanelType] = useState<'faq' | 'rules'>('faq');
 
   const { data, loading, error, retry } = useAsync(() => fetchHackathonDetail(slug));
 
@@ -757,23 +950,21 @@ export default function HackathonDetailPage({
                   ))}
                 </ul>
                 <div className="flex gap-3 mt-2">
-                  {sections.info.rules ? (
-                    <button
-                      onClick={() => { setPanelType('rules'); setPanelOpen(true); }}
+                  {sections.info.links?.rules ? (
+                    <a href={sections.info.links.rules} target="_blank" rel="noopener noreferrer"
                       className="flex items-center gap-1.5 text-sm font-semibold px-4 py-2 rounded-xl transition-all hover:scale-105 bg-violet-50 text-violet-700 border border-violet-200">
-                      <BookOpen className="w-3.5 h-3.5" />규정 보기
-                    </button>
+                      <ExternalLink className="w-3.5 h-3.5" />규정 보기
+                    </a>
                   ) : (
                     <span className="flex items-center gap-1.5 text-sm font-semibold px-4 py-2 rounded-xl bg-slate-50 text-slate-400 border border-slate-200 cursor-not-allowed opacity-60">
                       규정 보기 (준비 중)
                     </span>
                   )}
-                  {sections.info.faq ? (
-                    <button
-                      onClick={() => { setPanelType('faq'); setPanelOpen(true); }}
+                  {sections.info.links?.faq ? (
+                    <a href={sections.info.links.faq} target="_blank" rel="noopener noreferrer"
                       className="flex items-center gap-1.5 text-sm font-semibold px-4 py-2 rounded-xl transition-all hover:scale-105 bg-violet-50 text-violet-700 border border-violet-200">
-                      <HelpCircle className="w-3.5 h-3.5" />FAQ 보기
-                    </button>
+                      <ExternalLink className="w-3.5 h-3.5" />FAQ 보기
+                    </a>
                   ) : (
                     <span className="flex items-center gap-1.5 text-sm font-semibold px-4 py-2 rounded-xl bg-slate-50 text-slate-400 border border-slate-200 cursor-not-allowed opacity-60">
                       FAQ 보기 (준비 중)
@@ -865,23 +1056,13 @@ export default function HackathonDetailPage({
             )}
 
             {activeTab === 'teams' && (
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <h2 className="text-xl font-black text-slate-800">참여 팀</h2>
-                  <Link href={`/camp?hackathon=${slug}`}
-                    className="flex items-center gap-1.5 text-sm font-semibold px-4 py-2 rounded-xl transition-all hover:scale-105 bg-violet-50 text-violet-700 border border-violet-200">
-                    <Users className="w-3.5 h-3.5" />팀 모집 페이지
-                  </Link>
-                </div>
-                {filteredTeams.length === 0 ? (
-                  <EmptyState title="등록된 팀이 없습니다" description="아직 이 해커톤에 팀을 만든 참가자가 없습니다."
-                    action={{ label: '팀 만들기', onClick: () => router.push(`/camp?hackathon=${slug}`) }} />
-                ) : (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    {filteredTeams.map((t) => <TeamCard key={t.teamCode} team={t} hackathonStatus={hackathon.status} />)}
-                  </div>
-                )}
-              </div>
+              <TeamsSection
+                key={slug}
+                slug={slug}
+                hackathonStatus={hackathon.status}
+                filteredTeams={filteredTeams}
+                onNavigate={(path) => router.push(path)}
+              />
             )}
 
             {activeTab === 'submit' && (
@@ -899,13 +1080,6 @@ export default function HackathonDetailPage({
             )}
         </div>
       </main>
-      <InfoPanel
-        open={panelOpen}
-        type={panelType}
-        faq={sections.info.faq}
-        rules={sections.info.rules}
-        onClose={() => setPanelOpen(false)}
-      />
     </div>
   );
 }

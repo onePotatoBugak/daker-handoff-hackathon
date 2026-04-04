@@ -348,24 +348,24 @@ export default function App() {
             <h2 className="text-3xl font-black" style={{ color: '#1e1b4b' }}>무엇을 원하시나요?</h2>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {NAV_CARDS.map((card) => (
               <Link key={card.href} href={card.href} className="group">
                 <div
-                  className="light-card h-full p-6 flex flex-col"
+                  className="light-card h-full p-10 flex flex-col"
                   style={{ background: 'rgba(255,255,255,0.9)' }}
                 >
                   <div
-                    className="w-11 h-11 rounded-xl flex items-center justify-center mb-4 transition-transform duration-300 group-hover:scale-110"
-                    style={{ background: card.bg, border: `1px solid ${card.border}`, color: card.color }}
+                    className="w-16 h-16 rounded-2xl flex items-center justify-center mb-6 transition-transform duration-300 group-hover:scale-110"
+                    style={{ background: card.bg, border: `1.5px solid ${card.border}`, color: card.color }}
                   >
-                    {card.icon}
+                    <span className="w-8 h-8 flex items-center justify-center [&>svg]:w-8 [&>svg]:h-8">{card.icon}</span>
                   </div>
-                  <h3 className="text-base font-black mb-2" style={{ color: '#1e1b4b' }}>{card.title}</h3>
-                  <p className="text-sm leading-relaxed flex-1 mb-4" style={{ color: '#6b7280' }}>{card.description}</p>
-                  <div className="flex items-center gap-1 text-sm font-semibold" style={{ color: card.color }}>
+                  <h3 className="text-2xl font-black mb-3" style={{ color: '#1e1b4b' }}>{card.title}</h3>
+                  <p className="text-base leading-relaxed flex-1 mb-6" style={{ color: '#6b7280' }}>{card.description}</p>
+                  <div className="flex items-center gap-1.5 text-base font-bold" style={{ color: card.color }}>
                     바로가기
-                    <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                    <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                   </div>
                 </div>
               </Link>

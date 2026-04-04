@@ -5,19 +5,9 @@ import { Trophy, Users, Rocket, ChevronRight, ArrowRight, Star } from 'lucide-re
 import Navbar from '@/components/Navbar';
 import StatusBadge from '@/components/StatusBadge';
 import CountdownTimer from '@/components/CountdownTimer';
-import { HACKATHONS, SEED_TEAMS, SEED_LEADERBOARDS } from '@/lib/data';
-
-const FEATURED = HACKATHONS.filter((h) => h.status === 'ongoing' || h.status === 'upcoming');
-
-const STATS = [
-  { value: String(HACKATHONS.length), label: '해커톤', suffix: '개' },
-  { value: String(SEED_TEAMS.length), label: '등록 팀', suffix: '개+' },
-  {
-    value: String(Object.values(SEED_LEADERBOARDS).reduce((s, lb) => s + lb.entries.length, 0)),
-    label: '제출 기록',
-    suffix: '개',
-  },
-];
+import ErrorState from '@/components/ErrorState';
+import { fetchHomeData } from '@/lib/api';
+import { useAsync } from '@/hooks/useAsync';
 
 const NAV_CARDS = [
   {
@@ -193,6 +183,17 @@ function HeroOrbs() {
 }
 
 export default function App() {
+  const { data, loading, error, retry } = useAsync(fetchHomeData);
+
+  const featured = data?.featured ?? [];
+  const stats = data
+    ? [
+        { value: String(data.stats.hackathonCount), label: '해커톤', suffix: '개' },
+        { value: String(data.stats.teamCount), label: '등록 팀', suffix: '개+' },
+        { value: String(data.stats.submitCount), label: '제출 기록', suffix: '개' },
+      ]
+    : null;
+
   return (
     <div className="min-h-screen overflow-x-hidden" style={{ background: '#f8f7ff' }}>
       <Navbar />
@@ -304,19 +305,38 @@ export default function App() {
             boxShadow: '0 4px 24px rgba(124,58,237,0.1)',
           }}
         >
-          {STATS.map((stat) => (
-            <div
-              key={stat.label}
-              className="text-center py-5 px-4"
-              style={{ background: 'rgba(255,255,255,0.85)', backdropFilter: 'blur(12px)' }}
-            >
-              <div className="flex items-baseline justify-center gap-0.5">
-                <span className="text-3xl font-black" style={{ color: '#6d28d9' }}>{stat.value}</span>
-                <span className="text-sm font-bold" style={{ color: '#a78bfa' }}>{stat.suffix}</span>
+          {loading ? (
+            Array.from({ length: 3 }).map((_, i) => (
+              <div key={i} className="text-center py-5 px-4 animate-pulse"
+                style={{ background: 'rgba(255,255,255,0.85)', backdropFilter: 'blur(12px)' }}>
+                <div className="h-9 bg-violet-100 rounded w-16 mx-auto mb-1" />
+                <div className="h-3 bg-violet-50 rounded w-12 mx-auto" />
               </div>
-              <p className="text-xs font-medium mt-0.5" style={{ color: '#9ca3af' }}>{stat.label}</p>
+            ))
+          ) : error ? (
+            <div className="col-span-3 py-5 px-4 text-center"
+              style={{ background: 'rgba(255,255,255,0.85)', backdropFilter: 'blur(12px)' }}>
+              <ErrorState
+                title="통계를 불러올 수 없습니다"
+                description="잠시 후 다시 시도해주세요."
+                onRetry={retry}
+              />
             </div>
-          ))}
+          ) : (
+            (stats ?? []).map((stat) => (
+              <div
+                key={stat.label}
+                className="text-center py-5 px-4"
+                style={{ background: 'rgba(255,255,255,0.85)', backdropFilter: 'blur(12px)' }}
+              >
+                <div className="flex items-baseline justify-center gap-0.5">
+                  <span className="text-3xl font-black" style={{ color: '#6d28d9' }}>{stat.value}</span>
+                  <span className="text-sm font-bold" style={{ color: '#a78bfa' }}>{stat.suffix}</span>
+                </div>
+                <p className="text-xs font-medium mt-0.5" style={{ color: '#9ca3af' }}>{stat.label}</p>
+              </div>
+            ))
+          )}
         </div>
       </div>
 
@@ -355,7 +375,7 @@ export default function App() {
       </section>
 
       {/* ── 주목할 해커톤 ── */}
-      {FEATURED.length > 0 && (
+      {(loading || featured.length > 0) && (
         <section className="pb-12 px-6">
           <div className="max-w-6xl mx-auto">
             <div className="flex items-end justify-between mb-8">
@@ -369,8 +389,24 @@ export default function App() {
               </Link>
             </div>
 
+            {loading ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {[1, 2].map((i) => (
+                  <div key={i} className="light-card p-6 animate-pulse">
+                    <div className="h-4 bg-violet-50 rounded w-16 mb-4" />
+                    <div className="h-5 bg-violet-50 rounded w-full mb-2" />
+                    <div className="h-5 bg-violet-50 rounded w-3/4 mb-4" />
+                    <div className="flex gap-2 mb-4">
+                      <div className="h-5 bg-violet-50 rounded-full w-16" />
+                      <div className="h-5 bg-violet-50 rounded-full w-20" />
+                    </div>
+                    <div className="h-4 bg-violet-50 rounded w-32" />
+                  </div>
+                ))}
+              </div>
+            ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {FEATURED.map((h) => (
+              {featured.map((h) => (
                 <Link key={h.slug} href={`/hackathons/${h.slug}`} className="group">
                   <div className="light-card p-6 relative overflow-hidden">
                     {/* 상단 컬러 라인 */}
@@ -414,6 +450,7 @@ export default function App() {
                 </Link>
               ))}
             </div>
+            )}
           </div>
         </section>
       )}

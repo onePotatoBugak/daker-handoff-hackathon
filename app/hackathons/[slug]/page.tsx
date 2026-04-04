@@ -23,16 +23,18 @@ import Navbar from '@/components/Navbar';
 import StatusBadge from '@/components/StatusBadge';
 import CountdownTimer from '@/components/CountdownTimer';
 import EmptyState from '@/components/EmptyState';
-import { HACKATHONS, HACKATHON_DETAILS, SEED_LEADERBOARDS } from '@/lib/data';
+import { SkeletonRow } from '@/components/LoadingState';
+import ErrorState from '@/components/ErrorState';
+import { fetchHackathonDetail } from '@/lib/api';
+import { useAsync } from '@/hooks/useAsync';
 import {
-  getTeams,
   getSubmissionBySlug,
   saveSubmission,
   getLocalLeaderboardBySlug,
   getTeamAction,
   setTeamAction,
 } from '@/lib/storage';
-import type { Team, LocalSubmission, LeaderboardEntry, HackathonDetail, HackathonStatus } from '@/lib/types';
+import type { Team, LocalSubmission, LeaderboardEntry, HackathonDetail, HackathonStatus, Leaderboard } from '@/lib/types';
 
 type TabKey =
   | 'overview'
@@ -274,11 +276,13 @@ function SubmitSection({
 function LeaderboardSection({
   slug,
   note,
+  leaderboard,
 }: {
   slug: string;
   note: string;
+  leaderboard: Leaderboard | null;
 }) {
-  const lb = SEED_LEADERBOARDS[slug];
+  const lb = leaderboard;
   const [localEntries, setLocalEntries] = useState<{ teamName: string; submittedAt: string }[]>([]);
 
   useEffect(() => {
@@ -402,14 +406,43 @@ export default function HackathonDetailPage({
   const { slug } = use(params);
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<TabKey>('overview');
-  const [teams, setTeams] = useState<Team[]>([]);
 
-  useEffect(() => {
-    setTeams(getTeams());
-  }, []);
+  const { data, loading, error, retry } = useAsync(() => fetchHackathonDetail(slug));
 
-  const hackathon = HACKATHONS.find((h) => h.slug === slug);
-  const detail = HACKATHON_DETAILS[slug];
+  const hackathon = data?.hackathon ?? null;
+  const detail = data?.detail ?? null;
+  const leaderboard = data?.leaderboard ?? null;
+  const filteredTeams: Team[] = data?.teams ?? [];
+
+  if (loading) {
+    return (
+      <div className="min-h-screen" style={{ background: '#f5f3ff' }}>
+        <Navbar />
+        <main className="max-w-4xl mx-auto px-4 py-8">
+          <div className="h-8 w-32 bg-violet-50 rounded animate-pulse mb-6" />
+          <div className="rounded-2xl bg-white border border-violet-100 p-7 mb-5 shadow-sm animate-pulse">
+            <div className="h-4 bg-violet-50 rounded w-24 mb-4" />
+            <div className="h-8 bg-violet-50 rounded w-3/4 mb-5" />
+            <div className="h-4 bg-violet-50 rounded w-48" />
+          </div>
+          <div className="space-y-3">
+            {Array.from({ length: 4 }).map((_, i) => <SkeletonRow key={i} />)}
+          </div>
+        </main>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen" style={{ background: '#f5f3ff' }}>
+        <Navbar />
+        <main className="max-w-4xl mx-auto px-4 py-16">
+          <ErrorState description="해커톤 정보를 불러오는 중 오류가 발생했습니다." onRetry={retry} />
+        </main>
+      </div>
+    );
+  }
 
   if (!hackathon) {
     return (
@@ -426,8 +459,18 @@ export default function HackathonDetailPage({
     );
   }
 
-  const sections = detail?.sections;
-  const filteredTeams = teams.filter((t) => t.hackathonSlug === slug);
+  if (!detail) {
+    return (
+      <div className="min-h-screen" style={{ background: '#f5f3ff' }}>
+        <Navbar />
+        <main className="max-w-4xl mx-auto px-4 py-16">
+          <EmptyState title="상세 데이터가 없습니다" description="이 해커톤의 상세 정보가 아직 제공되지 않았습니다." />
+        </main>
+      </div>
+    );
+  }
+
+  const sections = detail.sections;
 
   const TABS: { key: TabKey; label: string; icon: React.ReactNode }[] = [
     { key: 'overview', label: '개요', icon: <FileText className="w-4 h-4" /> },
@@ -507,10 +550,7 @@ export default function HackathonDetailPage({
         </div>
 
         {/* Tab Content */}
-        {!detail ? (
-          <EmptyState title="상세 데이터가 없습니다" description="이 해커톤의 상세 정보가 아직 제공되지 않았습니다." />
-        ) : (
-          <div className="bg-white rounded-2xl border border-violet-100 p-7 shadow-sm">
+        <div className="bg-white rounded-2xl border border-violet-100 p-7 shadow-sm">
             {activeTab === 'overview' && (
               <div className="space-y-5">
                 <h2 className="text-xl font-black text-slate-800">개요</h2>
@@ -677,11 +717,10 @@ export default function HackathonDetailPage({
             {activeTab === 'leaderboard' && (
               <div className="space-y-4">
                 <h2 className="text-xl font-black text-slate-800">리더보드</h2>
-                <LeaderboardSection slug={slug} note={sections.leaderboard.note} />
+                <LeaderboardSection slug={slug} note={sections.leaderboard.note} leaderboard={leaderboard} />
               </div>
             )}
-          </div>
-        )}
+        </div>
       </main>
     </div>
   );

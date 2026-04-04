@@ -1,13 +1,13 @@
 'use client';
 
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo } from 'react';
 import Link from 'next/link';
 import { ExternalLink, AlertCircle, Trophy, Globe } from 'lucide-react';
 import Navbar from '@/components/Navbar';
 import EmptyState from '@/components/EmptyState';
-import { HACKATHONS, SEED_LEADERBOARDS } from '@/lib/data';
-import { getLocalLeaderboardEntries } from '@/lib/storage';
-import type { LocalLeaderboardEntry } from '@/lib/storage';
+import ErrorState from '@/components/ErrorState';
+import { fetchRankingData } from '@/lib/api';
+import { useAsync } from '@/hooks/useAsync';
 
 type Period = 'all' | '30d' | '7d';
 type ViewMode = 'global' | 'hackathon';
@@ -56,12 +56,17 @@ function PodiumGlobal({ entries }: { entries: { rank: number; teamName: string; 
 }
 
 export default function RankingsPage() {
+  const { data, loading, error, retry } = useAsync(fetchRankingData);
   const [view, setView] = useState<ViewMode>('global');
   const [period, setPeriod] = useState<Period>('all');
-  const [selectedSlug, setSelectedSlug] = useState<string>(() => Object.keys(SEED_LEADERBOARDS)[0] ?? '');
-  const [localEntries, setLocalEntries] = useState<LocalLeaderboardEntry[]>([]);
+  const [selectedSlug, setSelectedSlug] = useState<string>('');
 
-  useEffect(() => { setLocalEntries(getLocalLeaderboardEntries()); }, []);
+  const hackathons = data?.hackathons ?? [];
+  const leaderboards = data?.leaderboards ?? {};
+  const localEntries = data?.localEntries ?? [];
+
+  // selectedSlug 초기화: 데이터 로드 후 첫 번째 leaderboard slug로 설정
+  const resolvedSlug = selectedSlug || Object.keys(leaderboards)[0] || '';
 
   const globalRanking = useMemo(() => {
     const cutoff = getPeriodCutoff(period);
@@ -70,8 +75,8 @@ export default function RankingsPage() {
       normalizedScore: number; submittedAt: string; isPending?: boolean;
     }[] = [];
 
-    Object.entries(SEED_LEADERBOARDS).forEach(([slug, lb]) => {
-      const hackathon = HACKATHONS.find((h) => h.slug === slug);
+    Object.entries(leaderboards).forEach(([slug, lb]) => {
+      const hackathon = hackathons.find((h) => h.slug === slug);
       lb.entries.forEach((entry) => {
         if (cutoff && new Date(entry.submittedAt) < cutoff) return;
         allEntries.push({
@@ -84,7 +89,7 @@ export default function RankingsPage() {
 
     localEntries.forEach((entry) => {
       if (cutoff && new Date(entry.submittedAt) < cutoff) return;
-      const hackathon = HACKATHONS.find((h) => h.slug === entry.hackathonSlug);
+      const hackathon = hackathons.find((h) => h.slug === entry.hackathonSlug);
       const exists = allEntries.some((e) => e.hackathonSlug === entry.hackathonSlug && e.teamName === entry.teamName);
       if (!exists) {
         allEntries.push({
@@ -109,19 +114,19 @@ export default function RankingsPage() {
     return Array.from(byTeam.values())
       .sort((a, b) => b.totalPoints - a.totalPoints)
       .map((team, idx) => ({ ...team, rank: idx + 1 }));
-  }, [period, localEntries]);
+  }, [period, localEntries, leaderboards, hackathons]);
 
-  const hackathonLeaderboard = SEED_LEADERBOARDS[selectedSlug];
+  const hackathonLeaderboard = leaderboards[resolvedSlug];
 
   const filteredHackathonEntries = useMemo(() => {
     if (!hackathonLeaderboard) return [];
     const cutoff = getPeriodCutoff(period);
     const seed = cutoff ? hackathonLeaderboard.entries.filter((e) => new Date(e.submittedAt) >= cutoff) : hackathonLeaderboard.entries;
-    const localForSlug = localEntries.filter((e) => e.hackathonSlug === selectedSlug);
+    const localForSlug = localEntries.filter((e) => e.hackathonSlug === resolvedSlug);
     const localRows = localForSlug.filter((e) => !seed.some((s) => s.teamName === e.teamName))
       .map((e, i) => ({ rank: seed.length + i + 1, teamName: e.teamName, score: 0, submittedAt: e.submittedAt, isPending: true }));
     return [...seed, ...localRows];
-  }, [hackathonLeaderboard, selectedSlug, period, localEntries]);
+  }, [hackathonLeaderboard, resolvedSlug, period, localEntries]);
 
   const hasScoreBreakdown = filteredHackathonEntries.some((e) => 'scoreBreakdown' in e && e.scoreBreakdown);
 
@@ -135,6 +140,40 @@ export default function RankingsPage() {
           <p className="text-slate-500 text-sm mt-1.5">전체 해커톤 참여 기록 기반 · 기간별 필터 지원</p>
         </div>
 
+        {loading ? (
+          <>
+            {/* 컨트롤 패널 skeleton */}
+            <div className="rounded-2xl bg-white border border-violet-100 p-5 mb-7 shadow-sm animate-pulse">
+              <div className="flex gap-2">
+                <div className="h-8 bg-slate-100 rounded-lg w-28" />
+                <div className="h-8 bg-slate-100 rounded-lg w-24" />
+                <div className="h-8 bg-slate-100 rounded-lg w-20 ml-auto" />
+                <div className="h-8 bg-slate-100 rounded-lg w-20" />
+                <div className="h-8 bg-slate-100 rounded-lg w-20" />
+              </div>
+            </div>
+            {/* 리더보드 테이블 skeleton */}
+            <div className="bg-white border border-violet-100 rounded-2xl p-6 shadow-sm">
+              <div className="flex items-center gap-2 mb-6 animate-pulse">
+                <div className="h-5 bg-slate-100 rounded w-5" />
+                <div className="h-5 bg-slate-100 rounded w-24" />
+              </div>
+              <div className="space-y-3">
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <div key={i} className="flex items-center gap-4 py-3 animate-pulse border-b border-slate-50 last:border-0">
+                    <div className="h-5 bg-slate-100 rounded w-8 shrink-0" />
+                    <div className="h-5 bg-slate-100 rounded flex-1" />
+                    <div className="h-5 bg-slate-100 rounded w-16" />
+                    <div className="h-5 bg-slate-100 rounded w-24 hidden sm:block" />
+                  </div>
+                ))}
+              </div>
+            </div>
+          </>
+        ) : error ? (
+          <ErrorState description="랭킹 데이터를 불러오는 중 오류가 발생했습니다." onRetry={retry} />
+        ) : (
+        <>
         {/* 컨트롤 */}
         <div className="flex flex-wrap items-center gap-3 mb-7 p-5 rounded-2xl bg-white border border-violet-100 shadow-sm">
           <div className="flex gap-1.5">
@@ -160,12 +199,12 @@ export default function RankingsPage() {
 
           {view === 'hackathon' && (
             <div className="flex gap-1.5 flex-wrap">
-              {HACKATHONS.map((h) => {
-                const hasData = !!SEED_LEADERBOARDS[h.slug];
+              {hackathons.map((h) => {
+                const hasData = !!leaderboards[h.slug];
                 return (
                   <button key={h.slug} onClick={() => hasData && setSelectedSlug(h.slug)} disabled={!hasData}
                     className={`text-xs px-3 py-1.5 rounded-lg border transition-all ${
-                      selectedSlug === h.slug && hasData
+                      resolvedSlug === h.slug && hasData
                         ? 'bg-violet-100 border-violet-300 text-violet-700 font-semibold'
                         : hasData
                         ? 'bg-slate-50 border-slate-200 text-slate-600 hover:border-violet-200'
@@ -278,13 +317,13 @@ export default function RankingsPage() {
               <div className="flex items-center justify-between mb-6">
                 <div>
                   <h2 className="text-lg font-bold text-slate-800">
-                    {HACKATHONS.find((h) => h.slug === selectedSlug)?.title}
+                    {hackathons.find((h) => h.slug === resolvedSlug)?.title}
                   </h2>
                   <p className="text-xs text-slate-500 mt-0.5">
                     업데이트: {new Date(hackathonLeaderboard.updatedAt).toLocaleString('ko-KR')} · {filteredHackathonEntries.length}팀
                   </p>
                 </div>
-                <Link href={`/hackathons/${selectedSlug}`}
+                <Link href={`/hackathons/${resolvedSlug}`}
                   className="text-xs text-violet-500 hover:text-violet-700 underline flex items-center gap-1">
                   상세 보기<ExternalLink className="w-3 h-3" />
                 </Link>
@@ -362,6 +401,8 @@ export default function RankingsPage() {
               </div>
             </div>
           )
+        )}
+        </>
         )}
       </main>
     </div>

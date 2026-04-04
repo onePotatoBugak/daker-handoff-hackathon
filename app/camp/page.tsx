@@ -7,18 +7,22 @@ import { Plus, X, ExternalLink, Users, Pencil } from 'lucide-react';
 import Navbar from '@/components/Navbar';
 import EmptyState from '@/components/EmptyState';
 import { SkeletonCard } from '@/components/LoadingState';
-import { HACKATHONS, ALL_POSITIONS } from '@/lib/data';
+import ErrorState from '@/components/ErrorState';
+import { fetchCampData } from '@/lib/api';
 import { getTeams, addTeam, updateTeam, updateTeamOpenStatus, getTeamAction, setTeamAction } from '@/lib/storage';
-import type { Team } from '@/lib/types';
+import { useAsync } from '@/hooks/useAsync';
+import type { Hackathon, Team } from '@/lib/types';
 
 // ── 팀 카드 ──────────────────────────────────────────────────────────────
 
 function TeamCard({
   team,
+  hackathons,
   onStatusChange,
   onEdit,
 }: {
   team: Team;
+  hackathons: Hackathon[];
   onStatusChange: () => void;
   onEdit: (team: Team) => void;
 }) {
@@ -39,7 +43,7 @@ function TeamCard({
   }
 
   const hackathon = team.hackathonSlug
-    ? HACKATHONS.find((h) => h.slug === team.hackathonSlug)
+    ? hackathons.find((h) => h.slug === team.hackathonSlug)
     : null;
 
   return (
@@ -135,11 +139,15 @@ function TeamCard({
 function TeamForm({
   defaultHackathon,
   editTarget,
+  hackathons,
+  positions,
   onDone,
   onClose,
 }: {
   defaultHackathon?: string;
   editTarget?: Team;
+  hackathons: Hackathon[];
+  positions: string[];
   onDone: () => void;
   onClose: () => void;
 }) {
@@ -230,7 +238,7 @@ function TeamForm({
               onChange={(e) => setForm((p) => ({ ...p, hackathonSlug: e.target.value }))}
               className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-700 focus:outline-none focus:border-violet-400">
               <option value="">연결 안 함</option>
-              {HACKATHONS.map((h) => <option key={h.slug} value={h.slug}>{h.title}</option>)}
+              {hackathons.map((h) => <option key={h.slug} value={h.slug}>{h.title}</option>)}
             </select>
           </div>
 
@@ -257,7 +265,7 @@ function TeamForm({
               모집 포지션 <span className="text-slate-400 text-xs font-normal">(복수 선택)</span>
             </label>
             <div className="flex flex-wrap gap-2">
-              {ALL_POSITIONS.map((pos) => (
+              {positions.map((pos) => (
                 <button type="button" key={pos} onClick={() => togglePosition(pos)}
                   className={`text-xs px-3 py-1.5 rounded-lg border transition-all ${
                     form.lookingFor.includes(pos)
@@ -304,18 +312,21 @@ function CampContent() {
   const searchParams = useSearchParams();
   const hackathonFilter = searchParams.get('hackathon') ?? 'all';
 
+  const { data, loading, error, retry } = useAsync(fetchCampData);
   const [teams, setTeams] = useState<Team[]>([]);
-  const [loading, setLoading] = useState(true);
   const [selectedHackathon, setSelectedHackathon] = useState<string>(hackathonFilter);
   const [positionFilter, setPositionFilter] = useState<string>('all');
   const [openOnly, setOpenOnly] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const [editTarget, setEditTarget] = useState<Team | undefined>(undefined);
 
+  // 데이터 로드 완료 후 teams 초기화
   useEffect(() => {
-    setTeams(getTeams());
-    setLoading(false);
-  }, []);
+    if (data) setTeams(data.teams);
+  }, [data]);
+
+  const hackathons = data?.hackathons ?? [];
+  const positions = data?.positions ?? [];
 
   function refreshTeams() {
     setTeams(getTeams());
@@ -366,6 +377,8 @@ function CampContent() {
               : undefined
           }
           editTarget={editTarget}
+          hackathons={hackathons}
+          positions={positions}
           onDone={refreshTeams}
           onClose={() => { setShowForm(false); setEditTarget(undefined); }}
         />
@@ -394,14 +407,14 @@ function CampContent() {
             style={{ background: '#f5f3ff', color: '#64748b', border: '1px solid #e2e8f0' }}>
             <option value="all">전체 해커톤</option>
             <option value="none">해커톤 미연결</option>
-            {HACKATHONS.map((h) => <option key={h.slug} value={h.slug}>{h.title}</option>)}
+            {hackathons.map((h) => <option key={h.slug} value={h.slug}>{h.title}</option>)}
           </select>
 
           <select value={positionFilter} onChange={(e) => setPositionFilter(e.target.value)}
             className="text-sm px-3 py-1.5 rounded-lg cursor-pointer focus:outline-none"
             style={{ background: '#f5f3ff', color: '#64748b', border: '1px solid #e2e8f0' }}>
             <option value="all">전체 포지션</option>
-            {ALL_POSITIONS.map((pos) => <option key={pos} value={pos}>{pos}</option>)}
+            {positions.map((pos) => <option key={pos} value={pos}>{pos}</option>)}
           </select>
 
           <label className="flex items-center gap-2 text-sm text-slate-600 cursor-pointer">
@@ -422,6 +435,8 @@ function CampContent() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {[1, 2, 3].map((i) => <SkeletonCard key={i} />)}
           </div>
+        ) : error ? (
+          <ErrorState description="팀 목록을 불러오는 중 오류가 발생했습니다." onRetry={retry} />
         ) : filtered.length === 0 ? (
           <EmptyState
             title="조건에 맞는 팀이 없습니다"
@@ -431,7 +446,7 @@ function CampContent() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {filtered.map((team) => (
-              <TeamCard key={team.teamCode} team={team} onStatusChange={refreshTeams} onEdit={openEdit} />
+              <TeamCard key={team.teamCode} team={team} hackathons={hackathons} onStatusChange={refreshTeams} onEdit={openEdit} />
             ))}
           </div>
         )}

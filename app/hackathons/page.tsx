@@ -7,13 +7,14 @@ import Navbar from '@/components/Navbar';
 import StatusBadge from '@/components/StatusBadge';
 import CountdownTimer from '@/components/CountdownTimer';
 import EmptyState from '@/components/EmptyState';
-import { HACKATHONS } from '@/lib/data';
+import { SkeletonList } from '@/components/LoadingState';
+import ErrorState from '@/components/ErrorState';
+import { fetchHackathons } from '@/lib/api';
 import { getTeams } from '@/lib/storage';
+import { useAsync } from '@/hooks/useAsync';
 import type { HackathonStatus, Team } from '@/lib/types';
 
 type SortKey = 'deadline' | 'newest' | 'enddate';
-
-const ALL_TAGS = Array.from(new Set(HACKATHONS.flatMap((h) => h.tags)));
 
 const SORT_OPTIONS: { value: SortKey; label: string }[] = [
   { value: 'deadline', label: '마감임박순' },
@@ -29,6 +30,7 @@ const STATUS_OPTIONS: { value: HackathonStatus | 'all'; label: string }[] = [
 ];
 
 export default function HackathonsPage() {
+  const { data: hackathons, loading, error, retry } = useAsync(fetchHackathons);
   const [statusFilter, setStatusFilter] = useState<HackathonStatus | 'all'>('all');
   const [tagFilter, setTagFilter] = useState<string>('all');
   const [sort, setSort] = useState<SortKey>('deadline');
@@ -42,8 +44,13 @@ export default function HackathonsPage() {
     return allTeams.filter((t) => t.hackathonSlug === slug).length;
   }
 
+  const allTags = useMemo(
+    () => Array.from(new Set((hackathons ?? []).flatMap((h) => h.tags))),
+    [hackathons],
+  );
+
   const filtered = useMemo(() => {
-    let result = HACKATHONS;
+    let result = hackathons ?? [];
     if (statusFilter !== 'all') result = result.filter((h) => h.status === statusFilter);
     if (tagFilter !== 'all') result = result.filter((h) => h.tags.includes(tagFilter));
     return [...result].sort((a, b) => {
@@ -51,7 +58,7 @@ export default function HackathonsPage() {
       if (sort === 'enddate') return new Date(a.period.endAt).getTime() - new Date(b.period.endAt).getTime();
       return new Date(a.period.submissionDeadlineAt).getTime() - new Date(b.period.submissionDeadlineAt).getTime();
     });
-  }, [statusFilter, tagFilter, sort]);
+  }, [hackathons, statusFilter, tagFilter, sort]);
 
   const hasActiveFilter = statusFilter !== 'all' || tagFilter !== 'all';
 
@@ -72,8 +79,8 @@ export default function HackathonsPage() {
             <div>
               <h1 className="text-4xl font-black text-slate-800">해커톤 목록</h1>
               <p className="text-slate-500 text-sm mt-1.5">
-                총 <span className="text-violet-700 font-semibold">{HACKATHONS.length}개</span> 해커톤 ·
-                조건에 맞는 <span className="text-violet-700 font-semibold">{filtered.length}개</span> 표시 중
+                총 <span className="text-violet-700 font-semibold">{hackathons?.length ?? '-'}개</span> 해커톤 ·
+                조건에 맞는 <span className="text-violet-700 font-semibold">{loading ? '-' : filtered.length}개</span> 표시 중
               </p>
             </div>
           </div>
@@ -106,7 +113,7 @@ export default function HackathonsPage() {
                 className="text-xs px-3 py-1.5 rounded-lg focus:outline-none"
                 style={{ background: '#f5f3ff', color: '#64748b', border: '1px solid #e2e8f0' }}>
                 <option value="all">전체 태그</option>
-                {ALL_TAGS.map((tag) => <option key={tag} value={tag}>{tag}</option>)}
+                {allTags.map((tag) => <option key={tag} value={tag}>{tag}</option>)}
               </select>
             </div>
 
@@ -136,7 +143,14 @@ export default function HackathonsPage() {
         </div>
 
         {/* 결과 */}
-        {filtered.length === 0 ? (
+        {loading ? (
+          <SkeletonList count={3} />
+        ) : error ? (
+          <ErrorState
+            description="해커톤 목록을 불러오는 중 오류가 발생했습니다."
+            onRetry={retry}
+          />
+        ) : filtered.length === 0 ? (
           <EmptyState
             title="조건에 맞는 해커톤이 없습니다"
             description="다른 상태나 태그를 선택하거나 필터를 초기화해보세요."

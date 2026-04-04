@@ -197,6 +197,7 @@ function TeamCard({
   onApply,
   onAccept,
   onReject,
+  disableAccept,
 }: {
   team: Team;
   hackathonStatus: HackathonStatus;
@@ -204,6 +205,7 @@ function TeamCard({
   onApply: () => void;
   onAccept: () => void;
   onReject: () => void;
+  disableAccept?: boolean;
 }) {
   const isEnded = hackathonStatus === 'ended';
   const isPending = action === 'invited' || action === 'applied';
@@ -259,7 +261,12 @@ function TeamCard({
               {action === 'invited' ? '초대 대기 중' : '지원 검토 중'}
             </span>
             <button onClick={onAccept}
-              className="flex items-center gap-1 text-xs px-2.5 py-1 rounded-lg bg-emerald-500 text-white font-semibold hover:bg-emerald-600 transition-all">
+              disabled={disableAccept}
+              className={`flex items-center gap-1 text-xs px-2.5 py-1 rounded-lg font-semibold transition-all ${
+                disableAccept
+                  ? 'bg-slate-200 text-slate-400 cursor-not-allowed'
+                  : 'bg-emerald-500 text-white hover:bg-emerald-600'
+              }`}>
               <CheckCircle className="w-3 h-3" />수락
             </button>
             <button onClick={onReject}
@@ -268,6 +275,11 @@ function TeamCard({
             </button>
           </div>
 
+        ) : team.isLocal ? (
+          <span className="inline-flex items-center gap-1 text-xs font-bold text-violet-600 bg-violet-50 border border-violet-200 px-2.5 py-1 rounded-full">
+            내가 만든 팀
+          </span>
+
         ) : team.isOpen ? (
           <div className="flex gap-2">
             <a href={team.contact.url} target="_blank" rel="noopener noreferrer"
@@ -275,7 +287,12 @@ function TeamCard({
               연락하기<ExternalLink className="w-3 h-3" />
             </a>
             <button onClick={onApply}
-              className="text-xs px-3 py-1 rounded-lg bg-violet-600 text-white hover:bg-violet-700 transition-all font-semibold">
+              disabled={disableAccept}
+              className={`text-xs px-3 py-1 rounded-lg font-semibold transition-all ${
+                disableAccept
+                  ? 'bg-slate-200 text-slate-400 cursor-not-allowed'
+                  : 'bg-violet-600 text-white hover:bg-violet-700'
+              }`}>
               지원하기
             </button>
           </div>
@@ -383,12 +400,25 @@ function TeamsSection({
     return init;
   });
 
+  const myTeam = filteredTeams.find((t) => t.isLocal);
+  const hasParticipatingTeam =
+    !!myTeam || filteredTeams.some((t) => (actions[t.teamCode] ?? null) === 'accepted');
+
   function updateAction(teamCode: string, action: TeamAction | null) {
+    if (action === 'applied' || action === 'accepted') {
+      const targetTeam = filteredTeams.find((t) => t.teamCode === teamCode);
+      if (targetTeam?.isLocal) return;
+      const alreadyInTeam =
+        !!myTeam ||
+        filteredTeams.some(
+          (t) => t.teamCode !== teamCode && (actions[t.teamCode] ?? null) === 'accepted'
+        );
+      if (alreadyInTeam) return;
+    }
     setTeamAction(teamCode, action);
     setActions((prev) => ({ ...prev, [teamCode]: action }));
   }
 
-  const myTeam = filteredTeams.find((t) => t.isLocal);
   const otherTeams = filteredTeams.filter((t) => !t.isLocal);
   // 초대 가능: 아직 액션 없음, 또는 거절 후 다시 초대(데모/재테스트용). invited/applied/accepted 는 제외.
   const invitableTeams = otherTeams.filter((t) => {
@@ -432,6 +462,7 @@ function TeamsSection({
               onApply={() => updateAction(t.teamCode, 'applied')}
               onAccept={() => updateAction(t.teamCode, 'accepted')}
               onReject={() => updateAction(t.teamCode, 'rejected')}
+              disableAccept={hasParticipatingTeam && (actions[t.teamCode] ?? null) !== 'accepted'}
             />
           ))}
         </div>

@@ -334,6 +334,17 @@ export const SEED_TEAMS: Team[] = [
     contact: { type: 'link', url: 'https://forms.gle/example4' },
     createdAt: '2026-03-05T09:20:00+09:00',
   },
+  {
+    teamCode: 'T-HANDOVER-03',
+    hackathonSlug: 'daker-handover-2026-03',
+    name: 'Good Enough',
+    isOpen: true,
+    memberCount: 5,
+    lookingFor: ['Frontend', 'Backend'],
+    intro: '빠르게 완성해서 일단 제출, 이후에 피드백 반영하며 개선하는 전략을 취합니다.',
+    contact: { type: 'link', url: 'https://forms.gle/example5' },
+    createdAt: '2026-03-05T09:10:00+09:00',
+  },
 ];
 
 // extraLeaderboards의 daker-handover-2026-03 데이터를 slug 기준으로 정규화

@@ -20,8 +20,6 @@ import {
   AlertCircle,
   FileUp,
   X,
-  BookOpen,
-  HelpCircle,
   UserPlus,
   XCircle,
 } from 'lucide-react';
@@ -446,12 +444,22 @@ function SubmitSection({
   slug,
   sections,
   hackathonStatus,
+  teams,
+  onOpenTeamsTab,
 }: {
   slug: string;
   sections: HackathonDetail['sections']['submit'];
   hackathonStatus: HackathonStatus;
+  teams: Team[];
+  onOpenTeamsTab: () => void;
 }) {
   const submitItems = useMemo(() => normalizeSubmitItems(sections), [sections]);
+  const participatingTeam = useMemo(() => {
+    const localTeam = teams.find((team) => team.isLocal);
+    if (localTeam) return localTeam;
+
+    return teams.find((team) => getTeamAction(team.teamCode) === 'accepted') ?? null;
+  }, [teams]);
   const [draft, setDraft] = useState<LocalSubmission | null>(() => getSubmissionBySlug(slug));
   const [form, setForm] = useState<{ artifacts: NonNullable<LocalSubmission['artifacts']>; memo: string }>(() => {
     const existing = getSubmissionBySlug(slug);
@@ -465,6 +473,10 @@ function SubmitSection({
   );
 
   function handleSave(status: 'draft' | 'submitted') {
+    if (!participatingTeam) {
+      return;
+    }
+
     if (status === 'submitted') {
       const missingItems = submitItems.filter((item) => !getArtifact(form.artifacts, item.key));
       if (missingItems.length > 0) {
@@ -474,7 +486,10 @@ function SubmitSection({
     }
 
     setSaved('saving');
-    const result = saveSubmission({ hackathonSlug: slug, ...form, status });
+    const result = saveSubmission(
+      { hackathonSlug: slug, ...form, status },
+      { teamName: participatingTeam.name }
+    );
     setDraft(result);
     setTimeout(() => setSaved(status === 'submitted' ? 'submitted' : 'draft-saved'), 400);
     if (status === 'draft') setTimeout(() => setSaved('idle'), 2000);
@@ -500,9 +515,85 @@ function SubmitSection({
 
   const isEnded = hackathonStatus === 'ended';
   const isSubmitted = saved === 'submitted' || draft?.status === 'submitted';
+  const isLocked = !participatingTeam;
 
   return (
     <div className="space-y-5">
+      <div
+        className={`relative overflow-hidden rounded-2xl border p-5 ${
+          isLocked
+            ? 'border-amber-200 bg-[linear-gradient(135deg,rgba(255,251,235,1),rgba(255,247,237,1))]'
+            : 'border-emerald-200 bg-[linear-gradient(135deg,rgba(236,253,245,1),rgba(240,253,250,1))]'
+        }`}
+      >
+        <div className="absolute right-0 top-0 h-24 w-24 rounded-full blur-2xl opacity-70 pointer-events-none bg-white/60" />
+        <div className="relative flex items-start gap-3">
+          <div
+            className={`mt-0.5 flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl ${
+              isLocked ? 'bg-amber-100 text-amber-700' : 'bg-emerald-100 text-emerald-700'
+            }`}
+          >
+            {isLocked ? <XCircle className="h-5 w-5" /> : <CheckCircle className="h-5 w-5" />}
+          </div>
+          <div className="min-w-0 flex-1">
+            <div className="flex flex-wrap items-center gap-2">
+              <h3 className={`text-base font-black ${isLocked ? 'text-amber-950' : 'text-emerald-950'}`}>
+                {isLocked ? '팀 참여 전에는 제출할 수 없습니다' : `${participatingTeam.name} 팀으로 제출할 수 있습니다`}
+              </h3>
+              <span
+                className={`rounded-full border px-2.5 py-1 text-[11px] font-bold ${
+                  isLocked
+                    ? 'border-amber-200 bg-white/80 text-amber-700'
+                    : 'border-emerald-200 bg-white/80 text-emerald-700'
+                }`}
+              >
+                {isLocked ? '제출 잠금' : '제출 가능'}
+              </span>
+            </div>
+            <p className={`mt-2 text-sm leading-relaxed ${isLocked ? 'text-amber-900/80' : 'text-emerald-900/80'}`}>
+              {isLocked
+                ? '현재 이 해커톤에서 참여 중인 팀이 확인되지 않았습니다. 팀 탭에서 팀을 만들거나, 초대를 수락한 뒤 제출을 진행하세요.'
+                : '업로드한 결과물과 최종 제출 기록은 현재 참여 중인 팀에 연결됩니다.'}
+            </p>
+            <div className="mt-4 flex flex-wrap gap-2">
+              {isLocked ? (
+                <>
+                  <button
+                    type="button"
+                    onClick={onOpenTeamsTab}
+                    className="inline-flex items-center gap-2 rounded-xl bg-amber-900 px-4 py-2 text-sm font-semibold text-white transition-all hover:opacity-90"
+                  >
+                    <Users className="h-4 w-4" />
+                    팀 탭으로 이동
+                  </button>
+                  <Link
+                    href={`/camp?hackathon=${slug}`}
+                    className="inline-flex items-center gap-2 rounded-xl border border-amber-200 bg-white/90 px-4 py-2 text-sm font-semibold text-amber-800 transition-colors hover:bg-white"
+                  >
+                    <UserPlus className="h-4 w-4" />
+                    팀 만들기 / 찾기
+                  </Link>
+                </>
+              ) : (
+                <>
+                  <div className="inline-flex items-center gap-2 rounded-xl border border-emerald-200 bg-white/90 px-4 py-2 text-sm font-semibold text-emerald-800">
+                    <Users className="h-4 w-4" />
+                    현재 제출 팀: {participatingTeam.name}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={onOpenTeamsTab}
+                    className="inline-flex items-center gap-2 rounded-xl border border-emerald-200 bg-white/90 px-4 py-2 text-sm font-semibold text-emerald-800 transition-colors hover:bg-white"
+                  >
+                    팀 상태 확인
+                  </button>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+
       {isEnded && (
         <div className="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-xl p-4 text-slate-500 text-sm font-semibold">
           <AlertCircle className="w-4 h-4 shrink-0" />
@@ -551,7 +642,7 @@ function SubmitSection({
               <input
                 type="file"
                 accept={item.accept.join(',')}
-                disabled={isSubmitted || isEnded}
+                disabled={isSubmitted || isEnded || isLocked}
                 onChange={(e) => handleFileChange(item, e.target.files?.[0] ?? null)}
                 className="block w-full text-sm text-slate-600 file:mr-3 file:rounded-lg file:border-0 file:bg-violet-50 file:px-3 file:py-2 file:text-sm file:font-semibold file:text-violet-700 hover:file:bg-violet-100 disabled:opacity-50"
               />
@@ -564,7 +655,7 @@ function SubmitSection({
                       {artifact.fileSize > 0 ? formatFileSize(artifact.fileSize) : '기존 저장 파일'} · {artifact.mimeType || '형식 미확인'}
                     </p>
                   </div>
-                  {!isSubmitted && !isEnded && (
+                  {!isSubmitted && !isEnded && !isLocked && (
                     <button
                       type="button"
                       onClick={() => handleFileChange(item, null)}
@@ -586,7 +677,7 @@ function SubmitSection({
           <label className="block text-sm font-semibold text-slate-700 mb-1.5">메모 (선택)</label>
           <textarea value={form.memo}
             onChange={(e) => setForm((p) => ({ ...p, memo: e.target.value }))}
-            disabled={isSubmitted || isEnded} rows={2} placeholder="제출에 대한 메모를 남기세요"
+            disabled={isSubmitted || isEnded || isLocked} rows={2} placeholder="제출에 대한 메모를 남기세요"
             className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:border-violet-400 disabled:opacity-50 resize-none" />
         </div>
 
@@ -594,7 +685,7 @@ function SubmitSection({
           <p className="text-xs text-slate-400">마지막 임시저장: {new Date(draft.savedAt).toLocaleString('ko-KR')}</p>
         )}
 
-        {!isSubmitted && !isEnded && (
+        {!isSubmitted && !isEnded && !isLocked && (
           <div className="flex gap-3">
             <button onClick={() => handleSave('draft')}
               className="flex items-center gap-2 px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 text-sm rounded-xl transition-all font-semibold">
@@ -1068,7 +1159,14 @@ export default function HackathonDetailPage({
             {activeTab === 'submit' && (
               <div className="space-y-4">
                 <h2 className="text-xl font-black text-slate-800">제출</h2>
-                <SubmitSection key={slug} slug={slug} sections={sections.submit} hackathonStatus={hackathon.status} />
+                <SubmitSection
+                  key={slug}
+                  slug={slug}
+                  sections={sections.submit}
+                  hackathonStatus={hackathon.status}
+                  teams={filteredTeams}
+                  onOpenTeamsTab={() => setActiveTab('teams')}
+                />
               </div>
             )}
 

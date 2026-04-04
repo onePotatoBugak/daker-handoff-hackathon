@@ -3,10 +3,12 @@
 import type { Team, LocalSubmission } from './types';
 import { SEED_TEAMS } from './data';
 
+// UI-flow.png에 명시된 localStorage 4개 키: hackathons · teams(camp) · submissions · leaderboards
 const KEYS = {
   TEAMS: 'nyt_teams',
   SUBMISSIONS: 'nyt_submissions',
   TEAM_ACTIONS: 'nyt_team_actions',
+  LEADERBOARDS: 'nyt_leaderboards', // UI-flow 명세 반영
 };
 
 function safeGet<T>(key: string, fallback: T): T {
@@ -45,11 +47,15 @@ export function addTeam(data: Omit<Team, 'teamCode' | 'createdAt' | 'isLocal'>):
   return team;
 }
 
-export function updateTeamOpenStatus(teamCode: string, isOpen: boolean): void {
+export function updateTeam(teamCode: string, updates: Partial<Omit<Team, 'teamCode' | 'createdAt' | 'isLocal'>>): void {
   const teams = getTeams().map((t) =>
-    t.teamCode === teamCode ? { ...t, isOpen } : t
+    t.teamCode === teamCode ? { ...t, ...updates } : t
   );
   safeSet(KEYS.TEAMS, teams);
+}
+
+export function updateTeamOpenStatus(teamCode: string, isOpen: boolean): void {
+  updateTeam(teamCode, { isOpen });
 }
 
 // ── Submissions ────────────────────────────────────────────────────────────
@@ -76,7 +82,9 @@ export function saveSubmission(
     submittedAt:
       data.status === 'submitted'
         ? new Date().toISOString()
-        : (existingIdx >= 0 ? submissions[existingIdx].submittedAt : undefined),
+        : existingIdx >= 0
+        ? submissions[existingIdx].submittedAt
+        : undefined,
   };
   if (existingIdx >= 0) {
     submissions[existingIdx] = submission;
@@ -84,10 +92,56 @@ export function saveSubmission(
     submissions.push(submission);
   }
   safeSet(KEYS.SUBMISSIONS, submissions);
+
+  // UI-flow: Submit → leaderboard 업데이트 (최종 제출 시 로컬 리더보드에 등록)
+  if (data.status === 'submitted') {
+    const teams = getTeams();
+    const localTeam = teams.find(
+      (t) => t.hackathonSlug === data.hackathonSlug && t.isLocal
+    );
+    addLocalLeaderboardEntry({
+      hackathonSlug: data.hackathonSlug,
+      teamName: localTeam?.name ?? '나의 제출',
+      submittedAt: submission.submittedAt ?? new Date().toISOString(),
+    });
+  }
+
   return submission;
 }
 
-// ── Team Actions (지원/수락 상태) ───────────────────────────────────────────
+// ── Leaderboard (localStorage) ─────────────────────────────────────────────
+// UI-flow.png: localStorage에 leaderboards 키 명시
+
+export interface LocalLeaderboardEntry {
+  hackathonSlug: string;
+  teamName: string;
+  submittedAt: string;
+}
+
+export function getLocalLeaderboardEntries(): LocalLeaderboardEntry[] {
+  return safeGet<LocalLeaderboardEntry[]>(KEYS.LEADERBOARDS, []);
+}
+
+export function addLocalLeaderboardEntry(entry: LocalLeaderboardEntry): void {
+  const entries = getLocalLeaderboardEntries();
+  const existingIdx = entries.findIndex(
+    (e) =>
+      e.hackathonSlug === entry.hackathonSlug &&
+      e.teamName === entry.teamName
+  );
+  if (existingIdx >= 0) {
+    entries[existingIdx] = entry;
+  } else {
+    entries.push(entry);
+  }
+  safeSet(KEYS.LEADERBOARDS, entries);
+}
+
+export function getLocalLeaderboardBySlug(slug: string): LocalLeaderboardEntry[] {
+  return getLocalLeaderboardEntries().filter((e) => e.hackathonSlug === slug);
+}
+
+// ── Team Actions (지원 상태) ────────────────────────────────────────────────
 
 export type TeamAction = 'applied' | 'accepted';
 
@@ -111,7 +165,5 @@ export function setTeamAction(
 
 export function resetStorage(): void {
   if (typeof window === 'undefined') return;
-  localStorage.removeItem(KEYS.TEAMS);
-  localStorage.removeItem(KEYS.SUBMISSIONS);
-  localStorage.removeItem(KEYS.TEAM_ACTIONS);
+  Object.values(KEYS).forEach((key) => localStorage.removeItem(key));
 }

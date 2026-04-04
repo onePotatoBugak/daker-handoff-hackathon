@@ -1,14 +1,15 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import Link from 'next/link';
-import { Filter, SortAsc } from 'lucide-react';
+import { Filter, SortAsc, Users } from 'lucide-react';
 import Navbar from '@/components/Navbar';
 import StatusBadge from '@/components/StatusBadge';
 import CountdownTimer from '@/components/CountdownTimer';
 import EmptyState from '@/components/EmptyState';
 import { HACKATHONS } from '@/lib/data';
-import type { HackathonStatus } from '@/lib/types';
+import { getTeams } from '@/lib/storage';
+import type { HackathonStatus, Team } from '@/lib/types';
 
 type SortKey = 'deadline' | 'newest' | 'enddate';
 
@@ -18,6 +19,15 @@ export default function HackathonsPage() {
   const [statusFilter, setStatusFilter] = useState<HackathonStatus | 'all'>('all');
   const [tagFilter, setTagFilter] = useState<string>('all');
   const [sort, setSort] = useState<SortKey>('deadline');
+  const [allTeams, setAllTeams] = useState<Team[]>([]);
+
+  useEffect(() => {
+    setAllTeams(getTeams());
+  }, []);
+
+  function getTeamCount(slug: string) {
+    return allTeams.filter((t) => t.hackathonSlug === slug).length;
+  }
 
   const filtered = useMemo(() => {
     let result = HACKATHONS;
@@ -168,6 +178,17 @@ export default function HackathonsPage() {
                         {new Date(h.period.endAt).toLocaleDateString('ko-KR')}
                       </span>
                     </div>
+                    {getTeamCount(h.slug) > 0 && (
+                      <div className="flex items-center justify-between pt-1">
+                        <span className="flex items-center gap-1">
+                          <Users className="w-3 h-3" />
+                          참여 팀
+                        </span>
+                        <span className="text-slate-300 font-medium">
+                          {getTeamCount(h.slug)}팀
+                        </span>
+                      </div>
+                    )}
                   </div>
                 </article>
               </Link>

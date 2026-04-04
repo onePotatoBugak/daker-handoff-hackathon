@@ -28,6 +28,7 @@ import {
   getTeams,
   getSubmissionBySlug,
   saveSubmission,
+  getLocalLeaderboardBySlug,
 } from '@/lib/storage';
 import type { Team, LocalSubmission, LeaderboardEntry, HackathonDetail } from '@/lib/types';
 
@@ -341,8 +342,18 @@ function LeaderboardSection({
   note: string;
 }) {
   const lb = SEED_LEADERBOARDS[slug];
+  const [localEntries, setLocalEntries] = useState<{ teamName: string; submittedAt: string }[]>([]);
 
-  if (!lb) {
+  useEffect(() => {
+    setLocalEntries(getLocalLeaderboardBySlug(slug));
+  }, [slug]);
+
+  // 로컬 제출 중 seed에 없는 것만 추가 (UI-flow: "leaderboards 업데이트")
+  const pendingEntries = localEntries.filter(
+    (le) => !lb?.entries.some((e) => e.teamName === le.teamName)
+  );
+
+  if (!lb && pendingEntries.length === 0) {
     return (
       <EmptyState
         title="집계 중입니다"
@@ -358,16 +369,12 @@ function LeaderboardSection({
         {note}
       </p>
 
-      {/* Top 3 Podium */}
-      {lb.entries.length >= 2 && (
+      {/* Top 3 Podium (seed 데이터에만 표시) */}
+      {lb && lb.entries.length >= 2 && (
         <div className="grid grid-cols-3 gap-3 mb-6">
-          {[1, 0, 2].map((idx) => {
-            const entry = lb.entries[idx];
-            if (!entry) return <div key={idx} />;
-            const rank = idx + 1;
-            const actualRank = idx === 0 ? 2 : idx === 1 ? 1 : 3;
-            const e = lb.entries.find((x) => x.rank === actualRank);
-            if (!e) return <div key={idx} />;
+          {[2, 1, 3].map((targetRank) => {
+            const e = lb.entries.find((x) => x.rank === targetRank);
+            if (!e) return <div key={targetRank} />;
             return (
               <div
                 key={e.rank}
@@ -400,14 +407,10 @@ function LeaderboardSection({
               <th className="py-3 px-4 text-left">순위</th>
               <th className="py-3 px-4 text-left">팀</th>
               <th className="py-3 px-4 text-right">점수</th>
-              {lb.entries[0]?.scoreBreakdown && (
+              {lb?.entries[0]?.scoreBreakdown && (
                 <>
-                  <th className="py-3 px-4 text-right hidden sm:table-cell">
-                    참가자(30%)
-                  </th>
-                  <th className="py-3 px-4 text-right hidden sm:table-cell">
-                    심사위원(70%)
-                  </th>
+                  <th className="py-3 px-4 text-right hidden sm:table-cell">참가자(30%)</th>
+                  <th className="py-3 px-4 text-right hidden sm:table-cell">심사위원(70%)</th>
                 </>
               )}
               <th className="py-3 px-4 text-right hidden md:table-cell">제출일</th>
@@ -415,17 +418,12 @@ function LeaderboardSection({
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-800">
-            {lb.entries.map((e) => (
-              <tr
-                key={e.rank}
-                className="hover:bg-slate-800/40 transition-colors"
-              >
+            {lb?.entries.map((e) => (
+              <tr key={e.rank} className="hover:bg-slate-800/40 transition-colors">
                 <td className="py-3 px-4 font-bold text-slate-300">
                   {MEDAL[e.rank] ?? `#${e.rank}`}
                 </td>
-                <td className="py-3 px-4 font-semibold text-white">
-                  {e.teamName}
-                </td>
+                <td className="py-3 px-4 font-semibold text-white">{e.teamName}</td>
                 <td className="py-3 px-4 text-right font-mono text-slate-200">
                   {typeof e.score === 'number' && e.score < 2
                     ? e.score.toFixed(4)
@@ -446,24 +444,48 @@ function LeaderboardSection({
                 </td>
                 <td className="py-3 px-4 text-right hidden md:table-cell">
                   {e.artifacts?.webUrl && (
-                    <a
-                      href={e.artifacts.webUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-xs text-blue-400 hover:text-blue-300 underline"
-                    >
+                    <a href={e.artifacts.webUrl} target="_blank" rel="noopener noreferrer" className="text-xs text-blue-400 hover:text-blue-300 underline">
                       웹사이트
                     </a>
                   )}
                 </td>
               </tr>
             ))}
+            {/* 로컬 제출 병합 — UI-flow: Submit → leaderboard 업데이트 */}
+            {pendingEntries.map((le) => (
+              <tr key={`local-${le.teamName}`} className="hover:bg-slate-800/40 bg-amber-500/5 transition-colors">
+                <td className="py-3 px-4 text-slate-500">-</td>
+                <td className="py-3 px-4 font-semibold text-white">
+                  <div className="flex items-center gap-2">
+                    {le.teamName}
+                    <span className="text-xs text-amber-400 border border-amber-400/30 bg-amber-400/10 px-1.5 py-0.5 rounded-full">
+                      집계 예정
+                    </span>
+                  </div>
+                </td>
+                <td className="py-3 px-4 text-right">
+                  <span className="text-xs text-slate-500">집계 중</span>
+                </td>
+                {lb?.entries[0]?.scoreBreakdown && (
+                  <>
+                    <td className="hidden sm:table-cell" />
+                    <td className="hidden sm:table-cell" />
+                  </>
+                )}
+                <td className="py-3 px-4 text-right text-xs text-slate-500 hidden md:table-cell">
+                  {new Date(le.submittedAt).toLocaleDateString('ko-KR')}
+                </td>
+                <td className="hidden md:table-cell" />
+              </tr>
+            ))}
           </tbody>
         </table>
       </div>
-      <p className="text-xs text-slate-500 text-right">
-        업데이트: {new Date(lb.updatedAt).toLocaleString('ko-KR')}
-      </p>
+      {lb && (
+        <p className="text-xs text-slate-500 text-right">
+          업데이트: {new Date(lb.updatedAt).toLocaleString('ko-KR')}
+        </p>
+      )}
     </div>
   );
 }

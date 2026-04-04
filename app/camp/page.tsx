@@ -3,19 +3,24 @@
 import { useState, useEffect, useMemo, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { Plus, X, ExternalLink, Users } from 'lucide-react';
+import { Plus, X, ExternalLink, Users, Pencil } from 'lucide-react';
 import Navbar from '@/components/Navbar';
 import EmptyState from '@/components/EmptyState';
+import { SkeletonCard } from '@/components/LoadingState';
 import { HACKATHONS, ALL_POSITIONS } from '@/lib/data';
-import { getTeams, addTeam, updateTeamOpenStatus, getTeamAction, setTeamAction } from '@/lib/storage';
+import { getTeams, addTeam, updateTeam, updateTeamOpenStatus, getTeamAction, setTeamAction } from '@/lib/storage';
 import type { Team } from '@/lib/types';
+
+// ── 팀 카드 ──────────────────────────────────────────────────────────────
 
 function TeamCard({
   team,
   onStatusChange,
+  onEdit,
 }: {
   team: Team;
   onStatusChange: () => void;
+  onEdit: (team: Team) => void;
 }) {
   const [action, setActionState] = useState<'applied' | 'accepted' | null>(null);
 
@@ -33,23 +38,27 @@ function TeamCard({
     }
   }
 
-  const hackathon = HACKATHONS.find((h) => h.slug === team.hackathonSlug);
+  const hackathon = team.hackathonSlug
+    ? HACKATHONS.find((h) => h.slug === team.hackathonSlug)
+    : null;
 
   return (
     <article className="bg-slate-900 border border-slate-800 rounded-xl p-5 hover:border-slate-700 transition-all flex flex-col h-full">
       <div className="flex items-start justify-between mb-3">
-        <div>
-          <h3 className="font-bold text-white text-base">{team.name}</h3>
-          {hackathon && (
+        <div className="flex-1 min-w-0 pr-2">
+          <h3 className="font-bold text-white text-base truncate">{team.name}</h3>
+          {hackathon ? (
             <Link
               href={`/hackathons/${hackathon.slug}`}
-              className="text-xs text-blue-400 hover:text-blue-300 underline mt-0.5 block"
+              className="text-xs text-blue-400 hover:text-blue-300 underline mt-0.5 block truncate"
             >
               {hackathon.title}
             </Link>
+          ) : (
+            <span className="text-xs text-slate-500 mt-0.5 block">해커톤 미연결</span>
           )}
         </div>
-        <div className="flex flex-col items-end gap-1">
+        <div className="flex flex-col items-end gap-1 shrink-0">
           <span
             className={`text-xs px-2 py-0.5 rounded-full font-medium border ${
               team.isOpen
@@ -91,15 +100,24 @@ function TeamCard({
         <span className="text-xs text-slate-500">현재 {team.memberCount}명</span>
         <div className="flex items-center gap-2">
           {team.isLocal && (
-            <button
-              onClick={() => {
-                updateTeamOpenStatus(team.teamCode, !team.isOpen);
-                onStatusChange();
-              }}
-              className="text-xs px-2.5 py-1 bg-slate-700 hover:bg-slate-600 text-slate-300 rounded-lg transition-all"
-            >
-              {team.isOpen ? '모집 마감' : '모집 재개'}
-            </button>
+            <>
+              <button
+                onClick={() => onEdit(team)}
+                className="flex items-center gap-1 text-xs px-2.5 py-1 bg-slate-700 hover:bg-slate-600 text-slate-300 rounded-lg transition-all"
+              >
+                <Pencil className="w-3 h-3" />
+                수정
+              </button>
+              <button
+                onClick={() => {
+                  updateTeamOpenStatus(team.teamCode, !team.isOpen);
+                  onStatusChange();
+                }}
+                className="text-xs px-2.5 py-1 bg-slate-700 hover:bg-slate-600 text-slate-300 rounded-lg transition-all"
+              >
+                {team.isOpen ? '모집 마감' : '재개'}
+              </button>
+            </>
           )}
           {team.isOpen && !team.isLocal && (
             <>
@@ -130,22 +148,27 @@ function TeamCard({
   );
 }
 
-function CreateTeamForm({
+// ── 팀 생성/수정 폼 ──────────────────────────────────────────────────────
+
+function TeamForm({
   defaultHackathon,
-  onCreated,
+  editTarget,
+  onDone,
   onClose,
 }: {
   defaultHackathon?: string;
-  onCreated: () => void;
+  editTarget?: Team;
+  onDone: () => void;
   onClose: () => void;
 }) {
+  const isEdit = !!editTarget;
   const [form, setForm] = useState({
-    name: '',
-    hackathonSlug: defaultHackathon ?? '',
-    intro: '',
-    lookingFor: [] as string[],
-    contactUrl: '',
-    memberCount: 1,
+    name: editTarget?.name ?? '',
+    hackathonSlug: editTarget?.hackathonSlug ?? defaultHackathon ?? '',
+    intro: editTarget?.intro ?? '',
+    lookingFor: editTarget?.lookingFor ?? ([] as string[]),
+    contactUrl: editTarget?.contact.url ?? '',
+    memberCount: editTarget?.memberCount ?? 1,
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -161,7 +184,6 @@ function CreateTeamForm({
   function validate(): boolean {
     const errs: Record<string, string> = {};
     if (!form.name.trim()) errs.name = '팀 이름을 입력해주세요.';
-    if (!form.hackathonSlug) errs.hackathon = '해커톤을 선택해주세요.';
     if (!form.intro.trim()) errs.intro = '팀 소개를 입력해주세요.';
     if (!form.contactUrl.trim()) errs.contactUrl = '연락처 URL을 입력해주세요.';
     setErrors(errs);
@@ -171,16 +193,28 @@ function CreateTeamForm({
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!validate()) return;
-    addTeam({
-      hackathonSlug: form.hackathonSlug,
-      name: form.name.trim(),
-      isOpen: true,
-      memberCount: form.memberCount,
-      lookingFor: form.lookingFor,
-      intro: form.intro.trim(),
-      contact: { type: 'link', url: form.contactUrl.trim() },
-    });
-    onCreated();
+
+    if (isEdit && editTarget) {
+      updateTeam(editTarget.teamCode, {
+        name: form.name.trim(),
+        hackathonSlug: form.hackathonSlug || '',
+        intro: form.intro.trim(),
+        lookingFor: form.lookingFor,
+        contact: { type: 'link', url: form.contactUrl.trim() },
+        memberCount: form.memberCount,
+      });
+    } else {
+      addTeam({
+        hackathonSlug: form.hackathonSlug || '',
+        name: form.name.trim(),
+        isOpen: true,
+        memberCount: form.memberCount,
+        lookingFor: form.lookingFor,
+        intro: form.intro.trim(),
+        contact: { type: 'link', url: form.contactUrl.trim() },
+      });
+    }
+    onDone();
     onClose();
   }
 
@@ -188,7 +222,7 @@ function CreateTeamForm({
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
       <div className="bg-slate-900 border border-slate-700 rounded-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between p-5 border-b border-slate-800">
-          <h2 className="text-lg font-bold">팀 만들기</h2>
+          <h2 className="text-lg font-bold">{isEdit ? '팀 수정' : '팀 만들기'}</h2>
           <button
             onClick={onClose}
             className="p-1 hover:bg-slate-800 rounded-lg transition-colors"
@@ -198,6 +232,7 @@ function CreateTeamForm({
         </div>
 
         <form onSubmit={handleSubmit} className="p-5 space-y-4">
+          {/* 팀 이름 */}
           <div>
             <label className="block text-sm font-medium text-slate-300 mb-1.5">
               팀 이름 <span className="text-red-400">*</span>
@@ -212,9 +247,11 @@ function CreateTeamForm({
             {errors.name && <p className="text-xs text-red-400 mt-1">{errors.name}</p>}
           </div>
 
+          {/* 해커톤 (선택사항 — memo: "해커톤에 연결되어 있지 않아도 생성은 가능") */}
           <div>
             <label className="block text-sm font-medium text-slate-300 mb-1.5">
-              해커톤 <span className="text-red-400">*</span>
+              해커톤{' '}
+              <span className="text-slate-500 text-xs font-normal">(선택사항)</span>
             </label>
             <select
               value={form.hackathonSlug}
@@ -223,18 +260,16 @@ function CreateTeamForm({
               }
               className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-slate-500"
             >
-              <option value="">해커톤 선택</option>
+              <option value="">연결 안 함</option>
               {HACKATHONS.map((h) => (
                 <option key={h.slug} value={h.slug}>
                   {h.title}
                 </option>
               ))}
             </select>
-            {errors.hackathon && (
-              <p className="text-xs text-red-400 mt-1">{errors.hackathon}</p>
-            )}
           </div>
 
+          {/* 팀 소개 */}
           <div>
             <label className="block text-sm font-medium text-slate-300 mb-1.5">
               팀 소개 <span className="text-red-400">*</span>
@@ -249,6 +284,7 @@ function CreateTeamForm({
             {errors.intro && <p className="text-xs text-red-400 mt-1">{errors.intro}</p>}
           </div>
 
+          {/* 현재 팀원 수 */}
           <div>
             <label className="block text-sm font-medium text-slate-300 mb-1.5">
               현재 팀원 수
@@ -265,9 +301,11 @@ function CreateTeamForm({
             />
           </div>
 
+          {/* 모집 포지션 */}
           <div>
             <label className="block text-sm font-medium text-slate-300 mb-2">
-              모집 포지션 (복수 선택)
+              모집 포지션{' '}
+              <span className="text-slate-500 text-xs font-normal">(복수 선택)</span>
             </label>
             <div className="flex flex-wrap gap-2">
               {ALL_POSITIONS.map((pos) => (
@@ -287,6 +325,7 @@ function CreateTeamForm({
             </div>
           </div>
 
+          {/* 연락처 URL */}
           <div>
             <label className="block text-sm font-medium text-slate-300 mb-1.5">
               연락처 URL <span className="text-red-400">*</span>
@@ -305,6 +344,7 @@ function CreateTeamForm({
             )}
           </div>
 
+          {/* 버튼 */}
           <div className="flex gap-3 pt-2">
             <button
               type="button"
@@ -317,7 +357,7 @@ function CreateTeamForm({
               type="submit"
               className="flex-1 py-2.5 bg-blue-600 hover:bg-blue-500 text-white text-sm rounded-xl transition-all font-medium"
             >
-              팀 생성
+              {isEdit ? '수정 완료' : '팀 생성'}
             </button>
           </div>
         </form>
@@ -326,19 +366,23 @@ function CreateTeamForm({
   );
 }
 
+// ── 메인 페이지 ──────────────────────────────────────────────────────────
+
 function CampContent() {
   const searchParams = useSearchParams();
   const hackathonFilter = searchParams.get('hackathon') ?? 'all';
 
   const [teams, setTeams] = useState<Team[]>([]);
-  const [selectedHackathon, setSelectedHackathon] =
-    useState<string>(hackathonFilter);
+  const [loading, setLoading] = useState(true);
+  const [selectedHackathon, setSelectedHackathon] = useState<string>(hackathonFilter);
   const [positionFilter, setPositionFilter] = useState<string>('all');
   const [openOnly, setOpenOnly] = useState(false);
   const [showForm, setShowForm] = useState(false);
+  const [editTarget, setEditTarget] = useState<Team | undefined>(undefined);
 
   useEffect(() => {
     setTeams(getTeams());
+    setLoading(false);
   }, []);
 
   function refreshTeams() {
@@ -347,8 +391,13 @@ function CampContent() {
 
   const filtered = useMemo(() => {
     return teams.filter((t) => {
-      if (selectedHackathon !== 'all' && t.hackathonSlug !== selectedHackathon)
-        return false;
+      if (selectedHackathon !== 'all') {
+        if (selectedHackathon === 'none') {
+          if (t.hackathonSlug) return false;
+        } else {
+          if (t.hackathonSlug !== selectedHackathon) return false;
+        }
+      }
       if (positionFilter !== 'all' && !t.lookingFor.includes(positionFilter))
         return false;
       if (openOnly && !t.isOpen) return false;
@@ -356,8 +405,7 @@ function CampContent() {
     });
   }, [teams, selectedHackathon, positionFilter, openOnly]);
 
-  const hasFilter =
-    selectedHackathon !== 'all' || positionFilter !== 'all' || openOnly;
+  const hasFilter = selectedHackathon !== 'all' || positionFilter !== 'all' || openOnly;
 
   function resetFilters() {
     setSelectedHackathon('all');
@@ -365,16 +413,29 @@ function CampContent() {
     setOpenOnly(false);
   }
 
+  function openCreate() {
+    setEditTarget(undefined);
+    setShowForm(true);
+  }
+
+  function openEdit(team: Team) {
+    setEditTarget(team);
+    setShowForm(true);
+  }
+
   return (
     <div className="min-h-screen bg-slate-950 text-white">
       <Navbar />
       {showForm && (
-        <CreateTeamForm
+        <TeamForm
           defaultHackathon={
-            selectedHackathon !== 'all' ? selectedHackathon : undefined
+            selectedHackathon !== 'all' && selectedHackathon !== 'none'
+              ? selectedHackathon
+              : undefined
           }
-          onCreated={refreshTeams}
-          onClose={() => setShowForm(false)}
+          editTarget={editTarget}
+          onDone={refreshTeams}
+          onClose={() => { setShowForm(false); setEditTarget(undefined); }}
         />
       )}
 
@@ -387,7 +448,7 @@ function CampContent() {
             </p>
           </div>
           <button
-            onClick={() => setShowForm(true)}
+            onClick={openCreate}
             className="flex items-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-500 text-white text-sm rounded-xl transition-all font-medium"
           >
             <Plus className="w-4 h-4" />
@@ -403,6 +464,7 @@ function CampContent() {
             className="bg-slate-800 border border-slate-700 rounded-lg px-3 py-1.5 text-sm text-slate-200 cursor-pointer focus:outline-none focus:border-slate-500"
           >
             <option value="all">전체 해커톤</option>
+            <option value="none">해커톤 미연결</option>
             {HACKATHONS.map((h) => (
               <option key={h.slug} value={h.slug}>
                 {h.title}
@@ -444,7 +506,11 @@ function CampContent() {
         </div>
 
         {/* Team Grid */}
-        {filtered.length === 0 ? (
+        {loading ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {[1, 2, 3].map((i) => <SkeletonCard key={i} />)}
+          </div>
+        ) : filtered.length === 0 ? (
           <EmptyState
             title="조건에 맞는 팀이 없습니다"
             description={
@@ -454,19 +520,24 @@ function CampContent() {
             }
             action={{
               label: hasFilter ? '필터 초기화' : '팀 만들기',
-              onClick: hasFilter ? resetFilters : () => setShowForm(true),
+              onClick: hasFilter ? resetFilters : openCreate,
             }}
           />
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {filtered.map((team) => (
-              <TeamCard key={team.teamCode} team={team} onStatusChange={refreshTeams} />
+              <TeamCard
+                key={team.teamCode}
+                team={team}
+                onStatusChange={refreshTeams}
+                onEdit={openEdit}
+              />
             ))}
           </div>
         )}
 
-        {/* 팀 없을 때 안내 배너 */}
-        {filtered.length > 0 && (
+        {/* 하단 CTA 배너 */}
+        {!loading && filtered.length > 0 && (
           <div className="mt-8 bg-slate-900 border border-slate-800 rounded-xl p-5 flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 bg-blue-600/20 rounded-xl flex items-center justify-center">
@@ -478,7 +549,7 @@ function CampContent() {
               </div>
             </div>
             <button
-              onClick={() => setShowForm(true)}
+              onClick={openCreate}
               className="flex items-center gap-1.5 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-sm rounded-lg transition-all font-medium"
             >
               <Plus className="w-4 h-4" />

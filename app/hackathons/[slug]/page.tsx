@@ -207,11 +207,13 @@ function TeamCard({ team, hackathonStatus }: { team: Team; hackathonStatus: Hack
     <div className="light-card p-4">
       <div className="flex items-start justify-between mb-2">
         <h3 className="font-semibold text-slate-800">{team.name}</h3>
-        <span className={`text-xs px-2 py-0.5 rounded-full font-semibold border ${
-          team.isOpen ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-slate-100 text-slate-400 border-slate-200'
-        }`}>
-          {team.isOpen ? '모집중' : '모집마감'}
-        </span>
+        {hackathonStatus !== 'ended' && (
+          <span className={`text-xs px-2 py-0.5 rounded-full font-semibold border ${
+            team.isOpen ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-slate-100 text-slate-400 border-slate-200'
+          }`}>
+            {team.isOpen ? '모집중' : '모집마감'}
+          </span>
+        )}
       </div>
       <p className="text-sm text-slate-500 mb-3 leading-relaxed">{team.intro}</p>
       <div className="flex flex-wrap gap-1.5 mb-3">

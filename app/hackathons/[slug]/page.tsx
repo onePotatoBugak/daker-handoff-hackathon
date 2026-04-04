@@ -32,7 +32,7 @@ import {
   getTeamAction,
   setTeamAction,
 } from '@/lib/storage';
-import type { Team, LocalSubmission, LeaderboardEntry, HackathonDetail } from '@/lib/types';
+import type { Team, LocalSubmission, LeaderboardEntry, HackathonDetail, HackathonStatus } from '@/lib/types';
 
 type TabKey =
   | 'overview'
@@ -82,7 +82,7 @@ function MilestoneTimeline({
   );
 }
 
-function TeamCard({ team }: { team: Team }) {
+function TeamCard({ team, hackathonStatus }: { team: Team; hackathonStatus: HackathonStatus }) {
   const [action, setAction] = useState<'applied' | 'accepted' | null>(null);
 
   useEffect(() => {
@@ -118,7 +118,9 @@ function TeamCard({ team }: { team: Team }) {
       </div>
       <div className="flex items-center justify-between">
         <span className="text-xs text-slate-400">현재 {team.memberCount}명</span>
-        {team.isOpen ? (
+        {hackathonStatus === 'ended' ? (
+          <span className="text-xs text-slate-400">해커톤 종료</span>
+        ) : team.isOpen ? (
           <div className="flex gap-2">
             <a href={team.contact.url} target="_blank" rel="noopener noreferrer"
               className="flex items-center gap-1 text-xs text-slate-500 hover:text-violet-600 underline transition-colors">
@@ -142,9 +144,11 @@ function TeamCard({ team }: { team: Team }) {
 function SubmitSection({
   slug,
   sections,
+  hackathonStatus,
 }: {
   slug: string;
   sections: HackathonDetail['sections']['submit'];
+  hackathonStatus: HackathonStatus;
 }) {
   const [draft, setDraft] = useState<LocalSubmission | null>(null);
   const [form, setForm] = useState({ plan: '', url: '', pdfUrl: '', memo: '' });
@@ -172,10 +176,17 @@ function SubmitSection({
     if (status === 'draft') setTimeout(() => setSaved('idle'), 2000);
   }
 
+  const isEnded = hackathonStatus === 'ended';
   const isSubmitted = saved === 'submitted' || draft?.status === 'submitted';
 
   return (
     <div className="space-y-5">
+      {isEnded && (
+        <div className="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-xl p-4 text-slate-500 text-sm font-semibold">
+          <AlertCircle className="w-4 h-4 shrink-0" />
+          해커톤이 종료되어 제출이 마감되었습니다.
+        </div>
+      )}
       <div className="rounded-xl p-4" style={{ background: 'rgba(109,40,217,0.04)', border: '1px solid rgba(109,40,217,0.12)' }}>
         <div className="flex items-center gap-2 mb-2 text-violet-700 font-semibold text-sm">
           <Info className="w-4 h-4" />제출 가이드
@@ -208,13 +219,13 @@ function SubmitSection({
               {item.format === 'text_or_url' ? (
                 <textarea value={form.plan}
                   onChange={(e) => setForm((p) => ({ ...p, plan: e.target.value }))}
-                  disabled={isSubmitted} rows={3} placeholder="기획서 내용 또는 URL을 입력하세요"
+                  disabled={isSubmitted || isEnded} rows={3} placeholder="기획서 내용 또는 URL을 입력하세요"
                   className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:border-violet-400 disabled:opacity-50 resize-none" />
               ) : (
                 <input type="url"
                   value={item.key === 'web' ? form.url : form.pdfUrl}
                   onChange={(e) => setForm((p) => item.key === 'web' ? { ...p, url: e.target.value } : { ...p, pdfUrl: e.target.value })}
-                  disabled={isSubmitted} placeholder="https://"
+                  disabled={isSubmitted || isEnded} placeholder="https://"
                   className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:border-violet-400 disabled:opacity-50" />
               )}
             </div>
@@ -224,7 +235,7 @@ function SubmitSection({
             <label className="block text-sm font-semibold text-slate-700 mb-1.5">제출물 URL / 파일명</label>
             <input type="text" value={form.url}
               onChange={(e) => setForm((p) => ({ ...p, url: e.target.value }))}
-              disabled={isSubmitted} placeholder="제출물 URL 또는 파일명 입력"
+              disabled={isSubmitted || isEnded} placeholder="제출물 URL 또는 파일명 입력"
               className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:border-violet-400 disabled:opacity-50" />
           </div>
         )}
@@ -233,7 +244,7 @@ function SubmitSection({
           <label className="block text-sm font-semibold text-slate-700 mb-1.5">메모 (선택)</label>
           <textarea value={form.memo}
             onChange={(e) => setForm((p) => ({ ...p, memo: e.target.value }))}
-            disabled={isSubmitted} rows={2} placeholder="제출에 대한 메모를 남기세요"
+            disabled={isSubmitted || isEnded} rows={2} placeholder="제출에 대한 메모를 남기세요"
             className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:border-violet-400 disabled:opacity-50 resize-none" />
         </div>
 
@@ -241,7 +252,7 @@ function SubmitSection({
           <p className="text-xs text-slate-400">마지막 임시저장: {new Date(draft.savedAt).toLocaleString('ko-KR')}</p>
         )}
 
-        {!isSubmitted && (
+        {!isSubmitted && !isEnded && (
           <div className="flex gap-3">
             <button onClick={() => handleSave('draft')}
               className="flex items-center gap-2 px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 text-sm rounded-xl transition-all font-semibold">
@@ -531,14 +542,26 @@ export default function HackathonDetailPage({
                   ))}
                 </ul>
                 <div className="flex gap-3 mt-2">
-                  <a href={sections.info.links.rules} target="_blank" rel="noopener noreferrer"
-                    className="flex items-center gap-1.5 text-sm font-semibold px-4 py-2 rounded-xl transition-all hover:scale-105 bg-violet-50 text-violet-700 border border-violet-200">
-                    <ExternalLink className="w-3.5 h-3.5" />규정 보기
-                  </a>
-                  <a href={sections.info.links.faq} target="_blank" rel="noopener noreferrer"
-                    className="flex items-center gap-1.5 text-sm font-semibold px-4 py-2 rounded-xl transition-all hover:scale-105 bg-violet-50 text-violet-700 border border-violet-200">
-                    <ExternalLink className="w-3.5 h-3.5" />FAQ 보기
-                  </a>
+                  {sections.info.links?.rules ? (
+                    <a href={sections.info.links.rules} target="_blank" rel="noopener noreferrer"
+                      className="flex items-center gap-1.5 text-sm font-semibold px-4 py-2 rounded-xl transition-all hover:scale-105 bg-violet-50 text-violet-700 border border-violet-200">
+                      <ExternalLink className="w-3.5 h-3.5" />규정 보기
+                    </a>
+                  ) : (
+                    <span className="flex items-center gap-1.5 text-sm font-semibold px-4 py-2 rounded-xl bg-slate-50 text-slate-400 border border-slate-200 cursor-not-allowed opacity-60">
+                      규정 보기 (준비 중)
+                    </span>
+                  )}
+                  {sections.info.links?.faq ? (
+                    <a href={sections.info.links.faq} target="_blank" rel="noopener noreferrer"
+                      className="flex items-center gap-1.5 text-sm font-semibold px-4 py-2 rounded-xl transition-all hover:scale-105 bg-violet-50 text-violet-700 border border-violet-200">
+                      <ExternalLink className="w-3.5 h-3.5" />FAQ 보기
+                    </a>
+                  ) : (
+                    <span className="flex items-center gap-1.5 text-sm font-semibold px-4 py-2 rounded-xl bg-slate-50 text-slate-400 border border-slate-200 cursor-not-allowed opacity-60">
+                      FAQ 보기 (준비 중)
+                    </span>
+                  )}
                 </div>
               </div>
             )}
@@ -638,7 +661,7 @@ export default function HackathonDetailPage({
                     action={{ label: '팀 만들기', onClick: () => router.push(`/camp?hackathon=${slug}`) }} />
                 ) : (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    {filteredTeams.map((t) => <TeamCard key={t.teamCode} team={t} />)}
+                    {filteredTeams.map((t) => <TeamCard key={t.teamCode} team={t} hackathonStatus={hackathon.status} />)}
                   </div>
                 )}
               </div>
@@ -647,7 +670,7 @@ export default function HackathonDetailPage({
             {activeTab === 'submit' && (
               <div className="space-y-4">
                 <h2 className="text-xl font-black text-slate-800">제출</h2>
-                <SubmitSection slug={slug} sections={sections.submit} />
+                <SubmitSection slug={slug} sections={sections.submit} hackathonStatus={hackathon.status} />
               </div>
             )}
 

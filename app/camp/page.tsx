@@ -105,7 +105,10 @@ function TeamCard({
               </button>
             </>
           )}
-          {team.isOpen && !team.isLocal && (
+          {hackathon?.status === 'ended' && !team.isLocal && (
+            <span className="text-xs text-slate-400">해커톤 종료</span>
+          )}
+          {team.isOpen && !team.isLocal && hackathon?.status !== 'ended' && (
             <>
               <a href={team.contact.url} target="_blank" rel="noopener noreferrer"
                 className="flex items-center gap-1 text-xs text-slate-500 hover:text-violet-600 transition-colors">

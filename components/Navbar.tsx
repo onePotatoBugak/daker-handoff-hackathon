@@ -13,52 +13,29 @@ const NAV_ITEMS = [
 
 export default function Navbar() {
   const pathname = usePathname();
-
   return (
-    <nav className="sticky top-0 z-50 border-b border-slate-800/60"
-      style={{ background: 'rgba(2, 8, 23, 0.85)', backdropFilter: 'blur(20px)' }}
-    >
+    <nav className="sticky top-0 z-50 border-b border-violet-100"
+      style={{ background: 'rgba(255,255,255,0.88)', backdropFilter: 'blur(16px)' }}>
       <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
-        {/* 로고 */}
         <Link href="/" className="flex items-center gap-2.5 group">
-          <div className="relative w-9 h-9 flex items-center justify-center">
-            <div className="absolute inset-0 bg-gradient-to-tr from-blue-600 to-violet-500 rounded-xl opacity-20 group-hover:opacity-40 blur-sm transition-opacity" />
-            <div className="relative w-9 h-9 bg-gradient-to-tr from-blue-500 to-violet-500 rounded-xl flex items-center justify-center font-black text-sm shadow-lg group-hover:scale-105 transition-transform">
-              <span className="text-white">N</span>
-            </div>
-          </div>
-          <div className="flex flex-col">
-            <span className="text-[15px] font-bold tracking-tight text-white leading-none">
-              Now Your Thon
-            </span>
-            <span className="text-[10px] text-slate-500 tracking-widest font-medium mt-0.5">
-              HACKATHON HUB
-            </span>
+          <div className="w-9 h-9 rounded-xl flex items-center justify-center font-black text-sm text-white shadow-md group-hover:scale-105 transition-transform"
+            style={{ background: 'linear-gradient(135deg, #7c3aed, #4f46e5)' }}>N</div>
+          <div className="flex flex-col leading-none">
+            <span className="text-[15px] font-bold text-violet-900">Now Your Thon</span>
+            <span className="text-[10px] font-semibold text-violet-400 tracking-widest uppercase mt-0.5">Hackathon Hub</span>
           </div>
         </Link>
-
-        {/* 네비게이션 */}
         <ul className="flex items-center gap-1">
           {NAV_ITEMS.map(({ href, label, icon: Icon }) => {
-            const isActive =
-              href === '/' ? pathname === '/' : pathname.startsWith(href);
+            const isActive = href === '/' ? pathname === '/' : pathname.startsWith(href);
             return (
               <li key={href}>
-                <Link
-                  href={href}
-                  className={`relative flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-sm font-medium transition-all duration-200 ${
-                    isActive
-                      ? 'text-white'
-                      : 'text-slate-400 hover:text-slate-100 hover:bg-slate-800/60'
-                  }`}
-                >
-                  {isActive && (
-                    <span className="absolute inset-0 rounded-xl bg-gradient-to-r from-blue-600/20 to-violet-600/20 border border-blue-500/20" />
-                  )}
-                  <Icon className={`relative w-4 h-4 ${isActive ? 'text-blue-400' : ''}`} />
-                  <span className={`relative hidden sm:inline ${isActive ? 'text-white' : ''}`}>
-                    {label}
-                  </span>
+                <Link href={href}
+                  className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-sm font-semibold transition-all ${
+                    isActive ? 'bg-violet-100 text-violet-700' : 'text-slate-500 hover:bg-violet-50 hover:text-violet-700'
+                  }`}>
+                  <Icon className={`w-4 h-4 ${isActive ? 'text-violet-600' : ''}`} />
+                  <span className="hidden sm:inline">{label}</span>
                 </Link>
               </li>
             );

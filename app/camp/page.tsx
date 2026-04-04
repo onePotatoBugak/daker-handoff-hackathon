@@ -43,101 +43,80 @@ function TeamCard({
     : null;
 
   return (
-    <article className="bg-slate-900 border border-slate-800 rounded-xl p-5 hover:border-slate-700 transition-all flex flex-col h-full">
+    <article className="light-card p-5 flex flex-col h-full">
       <div className="flex items-start justify-between mb-3">
         <div className="flex-1 min-w-0 pr-2">
-          <h3 className="font-bold text-white text-base truncate">{team.name}</h3>
+          <h3 className="font-bold text-slate-800 text-base truncate">{team.name}</h3>
           {hackathon ? (
-            <Link
-              href={`/hackathons/${hackathon.slug}`}
-              className="text-xs text-blue-400 hover:text-blue-300 underline mt-0.5 block truncate"
-            >
+            <Link href={`/hackathons/${hackathon.slug}`}
+              className="text-xs text-violet-500 hover:text-violet-700 underline mt-0.5 block truncate">
               {hackathon.title}
             </Link>
           ) : (
-            <span className="text-xs text-slate-500 mt-0.5 block">해커톤 미연결</span>
+            <span className="text-xs text-slate-400 mt-0.5 block">해커톤 미연결</span>
           )}
         </div>
         <div className="flex flex-col items-end gap-1 shrink-0">
-          <span
-            className={`text-xs px-2 py-0.5 rounded-full font-medium border ${
-              team.isOpen
-                ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30'
-                : 'bg-slate-700/60 text-slate-500 border-slate-600/40'
-            }`}
-          >
+          <span className={`text-xs px-2 py-0.5 rounded-full font-semibold border ${
+            team.isOpen
+              ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+              : 'bg-slate-100 text-slate-400 border-slate-200'
+          }`}>
             {team.isOpen ? '모집중' : '모집마감'}
           </span>
           {team.isLocal && (
-            <span className="text-xs text-slate-500 border border-slate-700 rounded-full px-2 py-0.5">
+            <span className="text-xs text-violet-500 border border-violet-200 bg-violet-50 rounded-full px-2 py-0.5">
               내 팀
             </span>
           )}
         </div>
       </div>
 
-      <p className="text-sm text-slate-400 mb-3 leading-relaxed flex-1">{team.intro}</p>
+      <p className="text-sm text-slate-500 mb-3 leading-relaxed flex-1">{team.intro}</p>
 
       <div className="mb-3">
-        <p className="text-xs text-slate-500 mb-1.5">모집 포지션</p>
+        <p className="text-xs text-slate-400 mb-1.5">모집 포지션</p>
         <div className="flex flex-wrap gap-1.5">
           {team.lookingFor.length > 0 ? (
             team.lookingFor.map((pos) => (
-              <span
-                key={pos}
-                className="bg-slate-800 border border-slate-700 text-xs px-2 py-0.5 rounded-full text-slate-300"
-              >
+              <span key={pos} className="bg-violet-50 border border-violet-100 text-xs px-2 py-0.5 rounded-full text-violet-600">
                 {pos}
               </span>
             ))
           ) : (
-            <span className="text-xs text-slate-500">포지션 모집 없음</span>
+            <span className="text-xs text-slate-400">포지션 모집 없음</span>
           )}
         </div>
       </div>
 
-      <div className="flex items-center justify-between pt-3 border-t border-slate-800">
-        <span className="text-xs text-slate-500">현재 {team.memberCount}명</span>
+      <div className="flex items-center justify-between pt-3 border-t border-slate-100">
+        <span className="text-xs text-slate-400">현재 {team.memberCount}명</span>
         <div className="flex items-center gap-2">
           {team.isLocal && (
             <>
-              <button
-                onClick={() => onEdit(team)}
-                className="flex items-center gap-1 text-xs px-2.5 py-1 bg-slate-700 hover:bg-slate-600 text-slate-300 rounded-lg transition-all"
-              >
-                <Pencil className="w-3 h-3" />
-                수정
+              <button onClick={() => onEdit(team)}
+                className="flex items-center gap-1 text-xs px-2.5 py-1 bg-violet-50 hover:bg-violet-100 text-violet-600 rounded-lg transition-all border border-violet-100">
+                <Pencil className="w-3 h-3" />수정
               </button>
               <button
-                onClick={() => {
-                  updateTeamOpenStatus(team.teamCode, !team.isOpen);
-                  onStatusChange();
-                }}
-                className="text-xs px-2.5 py-1 bg-slate-700 hover:bg-slate-600 text-slate-300 rounded-lg transition-all"
-              >
+                onClick={() => { updateTeamOpenStatus(team.teamCode, !team.isOpen); onStatusChange(); }}
+                className="text-xs px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-lg transition-all">
                 {team.isOpen ? '모집 마감' : '재개'}
               </button>
             </>
           )}
           {team.isOpen && !team.isLocal && (
             <>
-              <a
-                href={team.contact.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-1 text-xs text-slate-400 hover:text-slate-200"
-              >
-                연락하기
-                <ExternalLink className="w-3 h-3" />
+              <a href={team.contact.url} target="_blank" rel="noopener noreferrer"
+                className="flex items-center gap-1 text-xs text-slate-500 hover:text-violet-600 transition-colors">
+                연락하기<ExternalLink className="w-3 h-3" />
               </a>
-              <button
-                onClick={handleApply}
-                className={`text-xs px-3 py-1 rounded-lg transition-all font-medium ${
+              <button onClick={handleApply}
+                className={`text-xs px-3 py-1 rounded-lg transition-all font-semibold ${
                   action === 'applied'
-                    ? 'bg-emerald-600 text-white'
-                    : 'bg-slate-700 hover:bg-slate-600 text-slate-300'
-                }`}
-              >
+                    ? 'bg-emerald-500 text-white'
+                    : 'bg-violet-600 hover:bg-violet-700 text-white'
+                }`}>
                 {action === 'applied' ? '지원완료 ✓' : '지원하기'}
               </button>
             </>
@@ -219,144 +198,94 @@ function TeamForm({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-      <div className="bg-slate-900 border border-slate-700 rounded-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
-        <div className="flex items-center justify-between p-5 border-b border-slate-800">
-          <h2 className="text-lg font-bold">{isEdit ? '팀 수정' : '팀 만들기'}</h2>
-          <button
-            onClick={onClose}
-            className="p-1 hover:bg-slate-800 rounded-lg transition-colors"
-          >
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm">
+      <div className="bg-white border border-violet-100 rounded-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto shadow-2xl">
+        <div className="flex items-center justify-between p-5 border-b border-slate-100">
+          <h2 className="text-lg font-bold text-slate-800">{isEdit ? '팀 수정' : '팀 만들기'}</h2>
+          <button onClick={onClose} className="p-1 hover:bg-slate-100 rounded-lg transition-colors">
             <X className="w-5 h-5 text-slate-400" />
           </button>
         </div>
 
         <form onSubmit={handleSubmit} className="p-5 space-y-4">
-          {/* 팀 이름 */}
           <div>
-            <label className="block text-sm font-medium text-slate-300 mb-1.5">
-              팀 이름 <span className="text-red-400">*</span>
+            <label className="block text-sm font-semibold text-slate-700 mb-1.5">
+              팀 이름 <span className="text-red-500">*</span>
             </label>
-            <input
-              type="text"
-              value={form.name}
+            <input type="text" value={form.name}
               onChange={(e) => setForm((p) => ({ ...p, name: e.target.value }))}
               placeholder="팀 이름을 입력하세요"
-              className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:border-slate-500"
-            />
-            {errors.name && <p className="text-xs text-red-400 mt-1">{errors.name}</p>}
+              className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:border-violet-400 focus:ring-1 focus:ring-violet-100" />
+            {errors.name && <p className="text-xs text-red-500 mt-1">{errors.name}</p>}
           </div>
 
-          {/* 해커톤 (선택사항 — memo: "해커톤에 연결되어 있지 않아도 생성은 가능") */}
           <div>
-            <label className="block text-sm font-medium text-slate-300 mb-1.5">
-              해커톤{' '}
-              <span className="text-slate-500 text-xs font-normal">(선택사항)</span>
+            <label className="block text-sm font-semibold text-slate-700 mb-1.5">
+              해커톤 <span className="text-slate-400 text-xs font-normal">(선택사항)</span>
             </label>
-            <select
-              value={form.hackathonSlug}
-              onChange={(e) =>
-                setForm((p) => ({ ...p, hackathonSlug: e.target.value }))
-              }
-              className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-slate-500"
-            >
+            <select value={form.hackathonSlug}
+              onChange={(e) => setForm((p) => ({ ...p, hackathonSlug: e.target.value }))}
+              className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-700 focus:outline-none focus:border-violet-400">
               <option value="">연결 안 함</option>
-              {HACKATHONS.map((h) => (
-                <option key={h.slug} value={h.slug}>
-                  {h.title}
-                </option>
-              ))}
+              {HACKATHONS.map((h) => <option key={h.slug} value={h.slug}>{h.title}</option>)}
             </select>
           </div>
 
-          {/* 팀 소개 */}
           <div>
-            <label className="block text-sm font-medium text-slate-300 mb-1.5">
-              팀 소개 <span className="text-red-400">*</span>
+            <label className="block text-sm font-semibold text-slate-700 mb-1.5">
+              팀 소개 <span className="text-red-500">*</span>
             </label>
-            <textarea
-              value={form.intro}
+            <textarea value={form.intro}
               onChange={(e) => setForm((p) => ({ ...p, intro: e.target.value }))}
-              rows={3}
-              placeholder="팀 목표, 진행 방식, 원하는 팀원 등을 소개해주세요"
-              className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:border-slate-500 resize-none"
-            />
-            {errors.intro && <p className="text-xs text-red-400 mt-1">{errors.intro}</p>}
+              rows={3} placeholder="팀 목표, 진행 방식, 원하는 팀원 등을 소개해주세요"
+              className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:border-violet-400 resize-none" />
+            {errors.intro && <p className="text-xs text-red-500 mt-1">{errors.intro}</p>}
           </div>
 
-          {/* 현재 팀원 수 */}
           <div>
-            <label className="block text-sm font-medium text-slate-300 mb-1.5">
-              현재 팀원 수
-            </label>
-            <input
-              type="number"
-              min={1}
-              max={10}
-              value={form.memberCount}
-              onChange={(e) =>
-                setForm((p) => ({ ...p, memberCount: Number(e.target.value) }))
-              }
-              className="w-24 bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-slate-500"
-            />
+            <label className="block text-sm font-semibold text-slate-700 mb-1.5">현재 팀원 수</label>
+            <input type="number" min={1} max={10} value={form.memberCount}
+              onChange={(e) => setForm((p) => ({ ...p, memberCount: Number(e.target.value) }))}
+              className="w-24 bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-800 focus:outline-none focus:border-violet-400" />
           </div>
 
-          {/* 모집 포지션 */}
           <div>
-            <label className="block text-sm font-medium text-slate-300 mb-2">
-              모집 포지션{' '}
-              <span className="text-slate-500 text-xs font-normal">(복수 선택)</span>
+            <label className="block text-sm font-semibold text-slate-700 mb-2">
+              모집 포지션 <span className="text-slate-400 text-xs font-normal">(복수 선택)</span>
             </label>
             <div className="flex flex-wrap gap-2">
               {ALL_POSITIONS.map((pos) => (
-                <button
-                  type="button"
-                  key={pos}
-                  onClick={() => togglePosition(pos)}
+                <button type="button" key={pos} onClick={() => togglePosition(pos)}
                   className={`text-xs px-3 py-1.5 rounded-lg border transition-all ${
                     form.lookingFor.includes(pos)
-                      ? 'bg-blue-600 border-blue-500 text-white'
-                      : 'bg-slate-800 border-slate-700 text-slate-300 hover:border-slate-500'
-                  }`}
-                >
+                      ? 'bg-violet-600 border-violet-500 text-white'
+                      : 'bg-slate-50 border-slate-200 text-slate-600 hover:border-violet-300'
+                  }`}>
                   {pos}
                 </button>
               ))}
             </div>
           </div>
 
-          {/* 연락처 URL */}
           <div>
-            <label className="block text-sm font-medium text-slate-300 mb-1.5">
-              연락처 URL <span className="text-red-400">*</span>
+            <label className="block text-sm font-semibold text-slate-700 mb-1.5">
+              연락처 URL <span className="text-red-500">*</span>
             </label>
-            <input
-              type="url"
-              value={form.contactUrl}
-              onChange={(e) =>
-                setForm((p) => ({ ...p, contactUrl: e.target.value }))
-              }
+            <input type="url" value={form.contactUrl}
+              onChange={(e) => setForm((p) => ({ ...p, contactUrl: e.target.value }))}
               placeholder="https://open.kakao.com/... 또는 https://forms.gle/..."
-              className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:border-slate-500"
-            />
-            {errors.contactUrl && (
-              <p className="text-xs text-red-400 mt-1">{errors.contactUrl}</p>
-            )}
+              className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:border-violet-400" />
+            {errors.contactUrl && <p className="text-xs text-red-500 mt-1">{errors.contactUrl}</p>}
           </div>
 
-          {/* 버튼 */}
           <div className="flex gap-3 pt-2">
-            <button
-              type="button"
-              onClick={onClose}
-              className="flex-1 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 text-sm rounded-xl transition-all font-medium"
-            >
+            <button type="button" onClick={onClose}
+              className="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-600 text-sm rounded-xl transition-all font-semibold">
               취소
             </button>
-            <button
-              type="submit"
-              className="flex-1 py-2.5 bg-blue-600 hover:bg-blue-500 text-white text-sm rounded-xl transition-all font-medium"
-            >
+            <button type="submit"
+              className="flex-1 py-2.5 text-white text-sm rounded-xl transition-all font-semibold hover:opacity-90"
+              style={{ background: 'linear-gradient(135deg, #6d28d9, #4f46e5)' }}>
               {isEdit ? '수정 완료' : '팀 생성'}
             </button>
           </div>
@@ -424,7 +353,7 @@ function CampContent() {
   }
 
   return (
-    <div className="min-h-screen text-white" style={{ background: '#020817' }}>
+    <div className="min-h-screen" style={{ background: '#f5f3ff' }}>
       <Navbar />
       {showForm && (
         <TeamForm
@@ -442,75 +371,50 @@ function CampContent() {
       <main className="max-w-6xl mx-auto px-4 py-10">
         <div className="flex items-start justify-between mb-8">
           <div>
-            <p className="text-xs text-slate-500 uppercase tracking-[0.3em] font-semibold mb-2">TEAM FINDER</p>
-            <h1 className="text-4xl font-black text-white">팀 찾기</h1>
-            <p className="text-slate-400 text-sm mt-1.5">
-              총 <span className="text-white font-semibold">{teams.length}개</span> 팀 ·
-              조건에 맞는 <span className="text-white font-semibold">{filtered.length}개</span> 표시 중
+            <p className="text-xs text-violet-400 uppercase tracking-[0.3em] font-bold mb-2">TEAM FINDER</p>
+            <h1 className="text-4xl font-black text-slate-800">팀 찾기</h1>
+            <p className="text-slate-500 text-sm mt-1.5">
+              총 <span className="text-violet-700 font-semibold">{teams.length}개</span> 팀 ·
+              조건에 맞는 <span className="text-violet-700 font-semibold">{filtered.length}개</span> 표시 중
             </p>
           </div>
-          <button
-            onClick={openCreate}
-            className="flex items-center gap-2 px-5 py-2.5 text-white text-sm rounded-xl transition-all font-semibold hover:scale-105"
-            style={{ background: 'linear-gradient(135deg, #3b82f6, #7c3aed)', boxShadow: '0 0 20px rgba(99,102,241,0.25)' }}
-          >
-            <Plus className="w-4 h-4" />
-            팀 만들기
+          <button onClick={openCreate}
+            className="flex items-center gap-2 px-5 py-2.5 text-white text-sm rounded-xl transition-all font-semibold hover:scale-105 shadow-md"
+            style={{ background: 'linear-gradient(135deg, #6d28d9, #4f46e5)' }}>
+            <Plus className="w-4 h-4" />팀 만들기
           </button>
         </div>
 
-        {/* Filters */}
-        <div className="flex flex-wrap items-center gap-3 mb-7 p-5 rounded-2xl border border-slate-800" style={{ background: 'rgba(15,23,42,0.8)' }}>
-          <select
-            value={selectedHackathon}
-            onChange={(e) => setSelectedHackathon(e.target.value)}
+        <div className="flex flex-wrap items-center gap-3 mb-7 p-5 rounded-2xl bg-white border border-violet-100 shadow-sm">
+          <select value={selectedHackathon} onChange={(e) => setSelectedHackathon(e.target.value)}
             className="text-sm px-3 py-1.5 rounded-lg cursor-pointer focus:outline-none"
-          style={{ background: 'rgba(30,41,59,0.8)', color: '#94a3b8', border: '1px solid rgba(51,65,85,0.8)' }}
-          >
+            style={{ background: '#f5f3ff', color: '#64748b', border: '1px solid #e2e8f0' }}>
             <option value="all">전체 해커톤</option>
             <option value="none">해커톤 미연결</option>
-            {HACKATHONS.map((h) => (
-              <option key={h.slug} value={h.slug}>
-                {h.title}
-              </option>
-            ))}
+            {HACKATHONS.map((h) => <option key={h.slug} value={h.slug}>{h.title}</option>)}
           </select>
 
-          <select
-            value={positionFilter}
-            onChange={(e) => setPositionFilter(e.target.value)}
+          <select value={positionFilter} onChange={(e) => setPositionFilter(e.target.value)}
             className="text-sm px-3 py-1.5 rounded-lg cursor-pointer focus:outline-none"
-            style={{ background: 'rgba(30,41,59,0.8)', color: '#94a3b8', border: '1px solid rgba(51,65,85,0.8)' }}
-          >
+            style={{ background: '#f5f3ff', color: '#64748b', border: '1px solid #e2e8f0' }}>
             <option value="all">전체 포지션</option>
-            {ALL_POSITIONS.map((pos) => (
-              <option key={pos} value={pos}>
-                {pos}
-              </option>
-            ))}
+            {ALL_POSITIONS.map((pos) => <option key={pos} value={pos}>{pos}</option>)}
           </select>
 
-          <label className="flex items-center gap-2 text-sm text-slate-300 cursor-pointer">
-            <input
-              type="checkbox"
-              checked={openOnly}
-              onChange={(e) => setOpenOnly(e.target.checked)}
-              className="w-4 h-4 rounded border-slate-600 bg-slate-800 cursor-pointer"
-            />
+          <label className="flex items-center gap-2 text-sm text-slate-600 cursor-pointer">
+            <input type="checkbox" checked={openOnly} onChange={(e) => setOpenOnly(e.target.checked)}
+              className="w-4 h-4 rounded border-violet-300 cursor-pointer accent-violet-600" />
             모집중만 보기
           </label>
 
           {hasFilter && (
-            <button
-              onClick={resetFilters}
-              className="text-xs text-slate-400 underline underline-offset-2 hover:text-slate-200 transition-colors ml-auto"
-            >
+            <button onClick={resetFilters}
+              className="text-xs text-violet-500 underline underline-offset-2 hover:text-violet-700 transition-colors ml-auto">
               필터 초기화
             </button>
           )}
         </div>
 
-        {/* Team Grid */}
         {loading ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {[1, 2, 3].map((i) => <SkeletonCard key={i} />)}
@@ -518,47 +422,32 @@ function CampContent() {
         ) : filtered.length === 0 ? (
           <EmptyState
             title="조건에 맞는 팀이 없습니다"
-            description={
-              hasFilter
-                ? '다른 조건으로 검색하거나 직접 팀을 만들어보세요.'
-                : '아직 등록된 팀이 없습니다. 첫 번째 팀을 만들어보세요!'
-            }
-            action={{
-              label: hasFilter ? '필터 초기화' : '팀 만들기',
-              onClick: hasFilter ? resetFilters : openCreate,
-            }}
+            description={hasFilter ? '다른 조건으로 검색하거나 직접 팀을 만들어보세요.' : '아직 등록된 팀이 없습니다. 첫 번째 팀을 만들어보세요!'}
+            action={{ label: hasFilter ? '필터 초기화' : '팀 만들기', onClick: hasFilter ? resetFilters : openCreate }}
           />
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {filtered.map((team) => (
-              <TeamCard
-                key={team.teamCode}
-                team={team}
-                onStatusChange={refreshTeams}
-                onEdit={openEdit}
-              />
+              <TeamCard key={team.teamCode} team={team} onStatusChange={refreshTeams} onEdit={openEdit} />
             ))}
           </div>
         )}
 
-        {/* 하단 CTA 배너 */}
         {!loading && filtered.length > 0 && (
-          <div className="mt-8 bg-slate-900 border border-slate-800 rounded-xl p-5 flex items-center justify-between">
+          <div className="mt-8 bg-white border border-violet-100 rounded-2xl p-5 flex items-center justify-between shadow-sm">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-blue-600/20 rounded-xl flex items-center justify-center">
-                <Users className="w-5 h-5 text-blue-400" />
+              <div className="w-10 h-10 bg-violet-50 rounded-xl flex items-center justify-center">
+                <Users className="w-5 h-5 text-violet-500" />
               </div>
               <div>
-                <p className="text-sm font-semibold text-white">원하는 팀을 못 찾으셨나요?</p>
-                <p className="text-xs text-slate-400">직접 팀을 만들고 팀원을 모집해보세요.</p>
+                <p className="text-sm font-semibold text-slate-800">원하는 팀을 못 찾으셨나요?</p>
+                <p className="text-xs text-slate-500">직접 팀을 만들고 팀원을 모집해보세요.</p>
               </div>
             </div>
-            <button
-              onClick={openCreate}
-              className="flex items-center gap-1.5 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-sm rounded-lg transition-all font-medium"
-            >
-              <Plus className="w-4 h-4" />
-              팀 만들기
+            <button onClick={openCreate}
+              className="flex items-center gap-1.5 px-4 py-2 text-white text-sm rounded-xl transition-all font-semibold hover:opacity-90"
+              style={{ background: 'linear-gradient(135deg, #6d28d9, #4f46e5)' }}>
+              <Plus className="w-4 h-4" />팀 만들기
             </button>
           </div>
         )}
@@ -569,7 +458,7 @@ function CampContent() {
 
 export default function CampPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen bg-slate-950" />}>
+    <Suspense fallback={<div className="min-h-screen" style={{ background: '#f5f3ff' }} />}>
       <CampContent />
     </Suspense>
   );

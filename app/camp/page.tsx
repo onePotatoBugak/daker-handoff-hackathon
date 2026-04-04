@@ -424,7 +424,7 @@ function CampContent() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-950 text-white">
+    <div className="min-h-screen text-white" style={{ background: '#020817' }}>
       <Navbar />
       {showForm && (
         <TeamForm
@@ -439,17 +439,20 @@ function CampContent() {
         />
       )}
 
-      <main className="max-w-6xl mx-auto px-4 py-8">
-        <div className="flex items-start justify-between mb-6">
+      <main className="max-w-6xl mx-auto px-4 py-10">
+        <div className="flex items-start justify-between mb-8">
           <div>
-            <h1 className="text-3xl font-bold mb-1">팀 찾기</h1>
-            <p className="text-slate-400 text-sm">
-              총 {teams.length}개 팀 · 조건에 맞는 {filtered.length}개 표시 중
+            <p className="text-xs text-slate-500 uppercase tracking-[0.3em] font-semibold mb-2">TEAM FINDER</p>
+            <h1 className="text-4xl font-black text-white">팀 찾기</h1>
+            <p className="text-slate-400 text-sm mt-1.5">
+              총 <span className="text-white font-semibold">{teams.length}개</span> 팀 ·
+              조건에 맞는 <span className="text-white font-semibold">{filtered.length}개</span> 표시 중
             </p>
           </div>
           <button
             onClick={openCreate}
-            className="flex items-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-500 text-white text-sm rounded-xl transition-all font-medium"
+            className="flex items-center gap-2 px-5 py-2.5 text-white text-sm rounded-xl transition-all font-semibold hover:scale-105"
+            style={{ background: 'linear-gradient(135deg, #3b82f6, #7c3aed)', boxShadow: '0 0 20px rgba(99,102,241,0.25)' }}
           >
             <Plus className="w-4 h-4" />
             팀 만들기
@@ -457,11 +460,12 @@ function CampContent() {
         </div>
 
         {/* Filters */}
-        <div className="flex flex-wrap items-center gap-3 mb-6 p-4 bg-slate-900 rounded-xl border border-slate-800">
+        <div className="flex flex-wrap items-center gap-3 mb-7 p-5 rounded-2xl border border-slate-800" style={{ background: 'rgba(15,23,42,0.8)' }}>
           <select
             value={selectedHackathon}
             onChange={(e) => setSelectedHackathon(e.target.value)}
-            className="bg-slate-800 border border-slate-700 rounded-lg px-3 py-1.5 text-sm text-slate-200 cursor-pointer focus:outline-none focus:border-slate-500"
+            className="text-sm px-3 py-1.5 rounded-lg cursor-pointer focus:outline-none"
+          style={{ background: 'rgba(30,41,59,0.8)', color: '#94a3b8', border: '1px solid rgba(51,65,85,0.8)' }}
           >
             <option value="all">전체 해커톤</option>
             <option value="none">해커톤 미연결</option>
@@ -475,7 +479,8 @@ function CampContent() {
           <select
             value={positionFilter}
             onChange={(e) => setPositionFilter(e.target.value)}
-            className="bg-slate-800 border border-slate-700 rounded-lg px-3 py-1.5 text-sm text-slate-200 cursor-pointer focus:outline-none focus:border-slate-500"
+            className="text-sm px-3 py-1.5 rounded-lg cursor-pointer focus:outline-none"
+            style={{ background: 'rgba(30,41,59,0.8)', color: '#94a3b8', border: '1px solid rgba(51,65,85,0.8)' }}
           >
             <option value="all">전체 포지션</option>
             {ALL_POSITIONS.map((pos) => (

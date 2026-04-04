@@ -537,68 +537,100 @@ export default function HackathonDetailPage({
   ];
 
   return (
-    <div className="min-h-screen bg-slate-950 text-white">
+    <div className="min-h-screen text-white" style={{ background: '#020817' }}>
       <Navbar />
-      <main className="max-w-4xl mx-auto px-4 py-6">
+      <main className="max-w-4xl mx-auto px-4 py-8">
         {/* Back */}
         <button
           onClick={() => router.back()}
-          className="flex items-center gap-1.5 text-sm text-slate-400 hover:text-slate-200 mb-5 transition-colors"
+          className="flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-200 mb-6 transition-colors group"
         >
-          <ArrowLeft className="w-4 h-4" />
-          해커톤 목록
+          <ArrowLeft className="w-4 h-4 group-hover:-translate-x-0.5 transition-transform" />
+          해커톤 목록으로
         </button>
 
         {/* Header */}
-        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 mb-5">
-          <div className="flex flex-wrap items-center gap-2 mb-3">
+        <div
+          className="relative overflow-hidden rounded-2xl border border-slate-800 p-7 mb-5"
+          style={{ background: 'rgba(15,23,42,0.9)' }}
+        >
+          {/* 상단 그라디언트 라인 */}
+          <div className={`absolute top-0 left-0 w-full h-0.5 ${
+            hackathon.status === 'ongoing' ? 'bg-gradient-to-r from-emerald-500 to-teal-400' :
+            hackathon.status === 'upcoming' ? 'bg-gradient-to-r from-blue-500 to-violet-500' :
+            'bg-gradient-to-r from-slate-700 to-slate-600'
+          }`} />
+          {/* 배경 오브 */}
+          <div className="absolute top-0 right-0 w-64 h-64 bg-blue-600/5 rounded-full blur-3xl pointer-events-none" />
+
+          <div className="flex flex-wrap items-center gap-2 mb-4">
             <StatusBadge status={hackathon.status} />
             {hackathon.tags.map((tag) => (
               <span
                 key={tag}
-                className="bg-slate-800 border border-slate-700 text-xs px-2 py-0.5 rounded-full text-slate-300"
+                className="text-[11px] px-2.5 py-0.5 rounded-full font-medium"
+                style={{ background: 'rgba(30,41,59,0.9)', color: '#94a3b8', border: '1px solid rgba(51,65,85,0.7)' }}
               >
                 {tag}
               </span>
             ))}
           </div>
-          <h1 className="text-2xl font-bold text-white mb-4 leading-snug">
+
+          <h1 className="text-2xl md:text-3xl font-black text-white mb-5 leading-snug relative">
             {hackathon.title}
           </h1>
-          <div className="flex flex-wrap gap-4 text-sm text-slate-400">
-            <div className="flex items-center gap-1.5">
-              <Calendar className="w-4 h-4" />
-              제출 마감:{' '}
-              {new Date(hackathon.period.submissionDeadlineAt).toLocaleDateString('ko-KR')}
+
+          <div className="flex flex-wrap gap-4">
+            <div className="flex items-center gap-1.5 text-sm"
+              style={{ color: '#94a3b8' }}>
+              <Calendar className="w-3.5 h-3.5" />
+              <span>제출 마감</span>
+              <span className="text-slate-200 font-medium">
+                {new Date(hackathon.period.submissionDeadlineAt).toLocaleDateString('ko-KR')}
+              </span>
             </div>
-            <div className="flex items-center gap-1.5">
-              <Clock className="w-4 h-4" />
-              대회 종료:{' '}
-              {new Date(hackathon.period.endAt).toLocaleDateString('ko-KR')}
+            <div className="flex items-center gap-1.5 text-sm"
+              style={{ color: '#94a3b8' }}>
+              <Clock className="w-3.5 h-3.5" />
+              <span>대회 종료</span>
+              <span className="text-slate-200 font-medium">
+                {new Date(hackathon.period.endAt).toLocaleDateString('ko-KR')}
+              </span>
             </div>
             {hackathon.status !== 'ended' && (
-              <CountdownTimer
-                deadline={hackathon.period.submissionDeadlineAt}
-                label="제출 마감"
-              />
+              <CountdownTimer deadline={hackathon.period.submissionDeadlineAt} label="마감" />
             )}
           </div>
         </div>
 
         {/* Tabs */}
-        <div className="overflow-x-auto mb-6">
-          <div className="flex gap-1 bg-slate-900 border border-slate-800 rounded-xl p-1 min-w-max">
+        <div className="overflow-x-auto mb-5">
+          <div
+            className="flex gap-1 rounded-2xl p-1.5 min-w-max border border-slate-800"
+            style={{ background: 'rgba(15,23,42,0.8)' }}
+          >
             {TABS.map(({ key, label, icon }) => (
               <button
                 key={key}
                 onClick={() => setActiveTab(key)}
-                className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${
+                className="relative flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-sm font-semibold transition-all duration-200 whitespace-nowrap"
+                style={
                   activeTab === key
-                    ? 'bg-slate-700 text-white'
-                    : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
-                }`}
+                    ? {
+                        background: 'linear-gradient(135deg, rgba(59,130,246,0.2), rgba(124,58,237,0.2))',
+                        color: '#fff',
+                        border: '1px solid rgba(99,102,241,0.25)',
+                      }
+                    : { color: '#64748b' }
+                }
+                onMouseEnter={(e) => {
+                  if (activeTab !== key) (e.currentTarget as HTMLElement).style.color = '#cbd5e1';
+                }}
+                onMouseLeave={(e) => {
+                  if (activeTab !== key) (e.currentTarget as HTMLElement).style.color = '#64748b';
+                }}
               >
-                {icon}
+                <span className={activeTab === key ? 'text-blue-400' : ''}>{icon}</span>
                 {label}
               </button>
             ))}
@@ -612,109 +644,102 @@ export default function HackathonDetailPage({
             description="이 해커톤의 상세 정보가 아직 제공되지 않았습니다."
           />
         ) : (
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6">
+          <div
+            className="rounded-2xl border border-slate-800 p-7"
+            style={{ background: 'rgba(15,23,42,0.9)' }}
+          >
             {activeTab === 'overview' && (
-              <div className="space-y-4">
-                <h2 className="text-lg font-bold">개요</h2>
-                <p className="text-slate-300 leading-relaxed">
+              <div className="space-y-5">
+                <h2 className="text-xl font-black text-white">개요</h2>
+                <p className="text-slate-300 leading-relaxed text-[15px]">
                   {sections.overview.summary}
                 </p>
-                <div className="bg-slate-800 rounded-xl p-4">
-                  <h3 className="text-sm font-semibold text-slate-300 mb-2">팀 구성 정책</h3>
-                  <ul className="text-sm text-slate-400 space-y-1">
-                    <li>
-                      개인 참가:{' '}
-                      <span className="text-slate-200">
-                        {sections.overview.teamPolicy.allowSolo ? '가능' : '불가'}
-                      </span>
-                    </li>
-                    <li>
-                      최대 팀원 수:{' '}
-                      <span className="text-slate-200">
-                        {sections.overview.teamPolicy.maxTeamSize}명
-                      </span>
-                    </li>
-                  </ul>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="rounded-xl p-4" style={{ background: 'rgba(30,41,59,0.6)', border: '1px solid rgba(51,65,85,0.5)' }}>
+                    <p className="text-xs text-slate-500 mb-1">개인 참가</p>
+                    <p className="text-base font-bold" style={{ color: sections.overview.teamPolicy.allowSolo ? '#34d399' : '#f87171' }}>
+                      {sections.overview.teamPolicy.allowSolo ? '가능' : '불가'}
+                    </p>
+                  </div>
+                  <div className="rounded-xl p-4" style={{ background: 'rgba(30,41,59,0.6)', border: '1px solid rgba(51,65,85,0.5)' }}>
+                    <p className="text-xs text-slate-500 mb-1">최대 팀원 수</p>
+                    <p className="text-base font-bold text-white">{sections.overview.teamPolicy.maxTeamSize}명</p>
+                  </div>
                 </div>
               </div>
             )}
 
             {activeTab === 'info' && (
               <div className="space-y-4">
-                <h2 className="text-lg font-bold">안내사항</h2>
-                <ul className="space-y-2">
+                <h2 className="text-xl font-black text-white">안내사항</h2>
+                <ul className="space-y-2.5">
                   {sections.info.notice.map((n, i) => (
                     <li
                       key={i}
-                      className="flex gap-2 text-sm text-slate-300 bg-slate-800 rounded-lg p-3"
+                      className="flex gap-3 text-sm text-slate-300 rounded-xl p-4"
+                      style={{ background: 'rgba(245,158,11,0.06)', border: '1px solid rgba(245,158,11,0.15)' }}
                     >
                       <AlertCircle className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
                       {n}
                     </li>
                   ))}
                 </ul>
-                <div className="flex gap-3 mt-4">
-                  <a
-                    href={sections.info.links.rules}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center gap-1.5 text-sm text-blue-400 hover:text-blue-300 underline"
-                  >
-                    <ExternalLink className="w-4 h-4" />
-                    규정 보기
+                <div className="flex gap-3 mt-2">
+                  <a href={sections.info.links.rules} target="_blank" rel="noopener noreferrer"
+                    className="flex items-center gap-1.5 text-sm font-medium px-4 py-2 rounded-xl transition-all hover:scale-105"
+                    style={{ background: 'rgba(59,130,246,0.1)', color: '#93c5fd', border: '1px solid rgba(59,130,246,0.2)' }}>
+                    <ExternalLink className="w-3.5 h-3.5" />규정 보기
                   </a>
-                  <a
-                    href={sections.info.links.faq}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center gap-1.5 text-sm text-blue-400 hover:text-blue-300 underline"
-                  >
-                    <ExternalLink className="w-4 h-4" />
-                    FAQ 보기
+                  <a href={sections.info.links.faq} target="_blank" rel="noopener noreferrer"
+                    className="flex items-center gap-1.5 text-sm font-medium px-4 py-2 rounded-xl transition-all hover:scale-105"
+                    style={{ background: 'rgba(59,130,246,0.1)', color: '#93c5fd', border: '1px solid rgba(59,130,246,0.2)' }}>
+                    <ExternalLink className="w-3.5 h-3.5" />FAQ 보기
                   </a>
                 </div>
               </div>
             )}
 
             {activeTab === 'eval' && (
-              <div className="space-y-4">
-                <h2 className="text-lg font-bold">평가 기준</h2>
-                <div className="bg-slate-800 rounded-xl p-4">
-                  <div className="text-sm font-semibold text-slate-300 mb-1">
-                    지표: {sections.eval.metricName}
-                  </div>
+              <div className="space-y-5">
+                <h2 className="text-xl font-black text-white">평가 기준</h2>
+                <div className="rounded-xl p-5" style={{ background: 'rgba(30,41,59,0.6)', border: '1px solid rgba(51,65,85,0.5)' }}>
+                  <div className="text-xs text-slate-500 uppercase tracking-wider mb-1">평가 지표</div>
+                  <div className="text-lg font-bold text-white mb-2">{sections.eval.metricName}</div>
                   <p className="text-sm text-slate-400">{sections.eval.description}</p>
                 </div>
                 {sections.eval.scoreDisplay && (
                   <div>
-                    <h3 className="text-sm font-semibold text-slate-300 mb-3">
-                      점수 구성 ({sections.eval.scoreDisplay.label})
-                    </h3>
-                    <div className="space-y-3">
-                      {sections.eval.scoreDisplay.breakdown.map((b) => (
-                        <div key={b.key}>
-                          <div className="flex justify-between text-sm mb-1">
-                            <span className="text-slate-300">{b.label}</span>
-                            <span className="text-slate-400">{b.weightPercent}%</span>
+                    <h3 className="text-sm font-semibold text-slate-300 mb-4">점수 구성 ({sections.eval.scoreDisplay.label})</h3>
+                    <div className="space-y-4">
+                      {sections.eval.scoreDisplay.breakdown.map((b, idx) => {
+                        const colors = ['#60a5fa', '#818cf8', '#34d399'];
+                        return (
+                          <div key={b.key}>
+                            <div className="flex justify-between text-sm mb-2">
+                              <span className="text-slate-200 font-medium">{b.label}</span>
+                              <span className="font-bold" style={{ color: colors[idx % colors.length] }}>{b.weightPercent}%</span>
+                            </div>
+                            <div className="h-2.5 rounded-full overflow-hidden" style={{ background: 'rgba(30,41,59,0.8)' }}>
+                              <div
+                                className="h-full rounded-full transition-all duration-700"
+                                style={{ width: `${b.weightPercent}%`, background: `linear-gradient(90deg, ${colors[idx % colors.length]}, ${colors[(idx + 1) % colors.length]})` }}
+                              />
+                            </div>
                           </div>
-                          <div className="h-2 bg-slate-700 rounded-full overflow-hidden">
-                            <div
-                              className="h-full bg-blue-500 rounded-full"
-                              style={{ width: `${b.weightPercent}%` }}
-                            />
-                          </div>
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   </div>
                 )}
                 {sections.eval.limits && (
-                  <div className="bg-slate-800 rounded-xl p-4 text-sm text-slate-400 space-y-1">
-                    <div>
-                      최대 실행 시간: {sections.eval.limits.maxRuntimeSec}초
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="rounded-xl p-4" style={{ background: 'rgba(30,41,59,0.6)', border: '1px solid rgba(51,65,85,0.5)' }}>
+                      <p className="text-xs text-slate-500 mb-1">최대 실행 시간</p>
+                      <p className="text-base font-bold text-white">{sections.eval.limits.maxRuntimeSec}초</p>
                     </div>
-                    <div>
-                      일일 최대 제출: {sections.eval.limits.maxSubmissionsPerDay}회
+                    <div className="rounded-xl p-4" style={{ background: 'rgba(30,41,59,0.6)', border: '1px solid rgba(51,65,85,0.5)' }}>
+                      <p className="text-xs text-slate-500 mb-1">일일 최대 제출</p>
+                      <p className="text-base font-bold text-white">{sections.eval.limits.maxSubmissionsPerDay}회</p>
                     </div>
                   </div>
                 )}
@@ -723,37 +748,38 @@ export default function HackathonDetailPage({
 
             {activeTab === 'prize' && sections.prize && (
               <div className="space-y-4">
-                <h2 className="text-lg font-bold">시상 내역</h2>
+                <h2 className="text-xl font-black text-white">시상 내역</h2>
                 <div className="space-y-3">
-                  {sections.prize.items.map((p) => (
-                    <div
-                      key={p.place}
-                      className="flex items-center justify-between bg-slate-800 rounded-xl p-4"
-                    >
-                      <div className="flex items-center gap-3">
-                        <span className="text-2xl">
-                          {p.place === '1st'
-                            ? '🥇'
-                            : p.place === '2nd'
-                            ? '🥈'
-                            : p.place === '3rd'
-                            ? '🥉'
-                            : '🏅'}
+                  {sections.prize.items.map((p, idx) => {
+                    const configs = [
+                      { emoji: '🥇', bg: 'rgba(245,158,11,0.08)', border: 'rgba(245,158,11,0.2)', color: '#fbbf24' },
+                      { emoji: '🥈', bg: 'rgba(148,163,184,0.08)', border: 'rgba(148,163,184,0.2)', color: '#94a3b8' },
+                      { emoji: '🥉', bg: 'rgba(180,83,9,0.08)', border: 'rgba(180,83,9,0.2)', color: '#f97316' },
+                    ];
+                    const c = configs[idx] ?? { emoji: '🏅', bg: 'rgba(30,41,59,0.6)', border: 'rgba(51,65,85,0.5)', color: '#94a3b8' };
+                    return (
+                      <div key={p.place} className="flex items-center justify-between rounded-2xl p-5"
+                        style={{ background: c.bg, border: `1px solid ${c.border}` }}>
+                        <div className="flex items-center gap-4">
+                          <span className="text-3xl">{c.emoji}</span>
+                          <div>
+                            <p className="font-bold text-white">{p.place}</p>
+                            <p className="text-xs text-slate-500">순위 상금</p>
+                          </div>
+                        </div>
+                        <span className="text-xl font-black" style={{ color: c.color }}>
+                          {formatKRW(p.amountKRW)}
                         </span>
-                        <span className="font-semibold text-white">{p.place}</span>
                       </div>
-                      <span className="text-lg font-bold text-emerald-400">
-                        {formatKRW(p.amountKRW)}
-                      </span>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
             )}
 
             {activeTab === 'schedule' && (
               <div className="space-y-4">
-                <h2 className="text-lg font-bold">일정</h2>
+                <h2 className="text-xl font-black text-white">진행 일정</h2>
                 <MilestoneTimeline milestones={sections.schedule.milestones} />
               </div>
             )}
@@ -761,22 +787,18 @@ export default function HackathonDetailPage({
             {activeTab === 'teams' && (
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
-                  <h2 className="text-lg font-bold">팀 목록</h2>
-                  <Link
-                    href={`/camp?hackathon=${slug}`}
-                    className="text-sm text-blue-400 hover:text-blue-300 underline"
-                  >
-                    팀 모집 페이지 →
+                  <h2 className="text-xl font-black text-white">참여 팀</h2>
+                  <Link href={`/camp?hackathon=${slug}`}
+                    className="flex items-center gap-1.5 text-sm font-medium px-4 py-2 rounded-xl transition-all hover:scale-105"
+                    style={{ background: 'rgba(59,130,246,0.1)', color: '#93c5fd', border: '1px solid rgba(59,130,246,0.2)' }}>
+                    <Users className="w-3.5 h-3.5" />팀 모집 페이지
                   </Link>
                 </div>
                 {filteredTeams.length === 0 ? (
                   <EmptyState
                     title="등록된 팀이 없습니다"
                     description="아직 이 해커톤에 팀을 만든 참가자가 없습니다."
-                    action={{
-                      label: '팀 만들기',
-                      onClick: () => router.push(`/camp?hackathon=${slug}`),
-                    }}
+                    action={{ label: '팀 만들기', onClick: () => router.push(`/camp?hackathon=${slug}`) }}
                   />
                 ) : (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -790,18 +812,15 @@ export default function HackathonDetailPage({
 
             {activeTab === 'submit' && (
               <div className="space-y-4">
-                <h2 className="text-lg font-bold">제출</h2>
+                <h2 className="text-xl font-black text-white">제출</h2>
                 <SubmitSection slug={slug} sections={sections.submit} />
               </div>
             )}
 
             {activeTab === 'leaderboard' && (
               <div className="space-y-4">
-                <h2 className="text-lg font-bold">리더보드</h2>
-                <LeaderboardSection
-                  slug={slug}
-                  note={sections.leaderboard.note}
-                />
+                <h2 className="text-xl font-black text-white">리더보드</h2>
+                <LeaderboardSection slug={slug} note={sections.leaderboard.note} />
               </div>
             )}
           </div>

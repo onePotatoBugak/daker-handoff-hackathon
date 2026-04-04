@@ -13,17 +13,20 @@ export default function ErrorState({
 }: ErrorStateProps) {
   return (
     <div className="flex flex-col items-center justify-center py-20 text-center">
-      <div className="w-14 h-14 bg-red-500/10 rounded-2xl flex items-center justify-center mb-4 border border-red-500/20">
-        <AlertTriangle className="w-7 h-7 text-red-400" />
+      <div
+        className="w-16 h-16 rounded-2xl flex items-center justify-center mb-5"
+        style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)' }}
+      >
+        <AlertTriangle className="w-8 h-8 text-red-400" />
       </div>
-      <h3 className="text-lg font-semibold text-slate-300 mb-2">{title}</h3>
+      <h3 className="text-lg font-bold text-slate-200 mb-2">{title}</h3>
       {description && (
-        <p className="text-sm text-slate-500 max-w-xs mb-4">{description}</p>
+        <p className="text-sm text-slate-500 max-w-xs leading-relaxed mb-5">{description}</p>
       )}
       {onRetry && (
         <button
           onClick={onRetry}
-          className="flex items-center gap-2 px-4 py-2 text-sm bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg transition-colors border border-slate-700"
+          className="flex items-center gap-2 px-5 py-2.5 text-sm font-semibold text-slate-200 rounded-xl transition-all hover:bg-slate-700 bg-slate-800 border border-slate-700"
         >
           <RefreshCw className="w-4 h-4" />
           다시 시도

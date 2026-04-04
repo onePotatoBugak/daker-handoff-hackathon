@@ -210,18 +210,19 @@ export default function RankingsPage() {
   );
 
   return (
-    <div className="min-h-screen bg-slate-950 text-white">
+    <div className="min-h-screen text-white" style={{ background: '#020817' }}>
       <Navbar />
-      <main className="max-w-4xl mx-auto px-4 py-8">
-        <div className="mb-6">
-          <h1 className="text-3xl font-bold mb-1">랭킹</h1>
-          <p className="text-slate-400 text-sm">
-            전체 해커톤 참여 기록 기반 글로벌 랭킹 · 해커톤별 리더보드
+      <main className="max-w-4xl mx-auto px-4 py-10">
+        <div className="mb-8">
+          <p className="text-xs text-slate-500 uppercase tracking-[0.3em] font-semibold mb-2">RANKINGS</p>
+          <h1 className="text-4xl font-black text-white">글로벌 랭킹</h1>
+          <p className="text-slate-400 text-sm mt-1.5">
+            전체 해커톤 참여 기록 기반 · 기간별 필터 지원
           </p>
         </div>
 
         {/* View & Period Controls */}
-        <div className="flex flex-wrap items-center gap-3 mb-6 p-4 bg-slate-900 rounded-xl border border-slate-800">
+        <div className="flex flex-wrap items-center gap-3 mb-7 p-5 rounded-2xl border border-slate-800" style={{ background: 'rgba(15,23,42,0.8)' }}>
           {/* View mode */}
           <div className="flex gap-1.5">
             <button

@@ -15,17 +15,29 @@ export default function Navbar() {
   const pathname = usePathname();
 
   return (
-    <nav className="sticky top-0 z-50 bg-slate-950/90 backdrop-blur border-b border-slate-800">
-      <div className="max-w-6xl mx-auto px-4 h-14 flex items-center justify-between">
-        <Link href="/" className="flex items-center gap-2 group">
-          <div className="w-8 h-8 bg-gradient-to-tr from-blue-500 to-purple-500 rounded-lg flex items-center justify-center font-black text-sm shadow-lg shadow-blue-500/20 group-hover:scale-110 transition-transform">
-            D
+    <nav className="sticky top-0 z-50 border-b border-slate-800/60"
+      style={{ background: 'rgba(2, 8, 23, 0.85)', backdropFilter: 'blur(20px)' }}
+    >
+      <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
+        {/* 로고 */}
+        <Link href="/" className="flex items-center gap-2.5 group">
+          <div className="relative w-9 h-9 flex items-center justify-center">
+            <div className="absolute inset-0 bg-gradient-to-tr from-blue-600 to-violet-500 rounded-xl opacity-20 group-hover:opacity-40 blur-sm transition-opacity" />
+            <div className="relative w-9 h-9 bg-gradient-to-tr from-blue-500 to-violet-500 rounded-xl flex items-center justify-center font-black text-sm shadow-lg group-hover:scale-105 transition-transform">
+              <span className="text-white">N</span>
+            </div>
           </div>
-          <span className="text-base font-bold tracking-tight text-slate-100 group-hover:text-white transition-colors">
-            Now Your Thon
-          </span>
+          <div className="flex flex-col">
+            <span className="text-[15px] font-bold tracking-tight text-white leading-none">
+              Now Your Thon
+            </span>
+            <span className="text-[10px] text-slate-500 tracking-widest font-medium mt-0.5">
+              HACKATHON HUB
+            </span>
+          </div>
         </Link>
 
+        {/* 네비게이션 */}
         <ul className="flex items-center gap-1">
           {NAV_ITEMS.map(({ href, label, icon: Icon }) => {
             const isActive =
@@ -34,14 +46,19 @@ export default function Navbar() {
               <li key={href}>
                 <Link
                   href={href}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
+                  className={`relative flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-sm font-medium transition-all duration-200 ${
                     isActive
-                      ? 'bg-slate-800 text-white'
-                      : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
+                      ? 'text-white'
+                      : 'text-slate-400 hover:text-slate-100 hover:bg-slate-800/60'
                   }`}
                 >
-                  <Icon className="w-4 h-4" />
-                  <span className="hidden sm:inline">{label}</span>
+                  {isActive && (
+                    <span className="absolute inset-0 rounded-xl bg-gradient-to-r from-blue-600/20 to-violet-600/20 border border-blue-500/20" />
+                  )}
+                  <Icon className={`relative w-4 h-4 ${isActive ? 'text-blue-400' : ''}`} />
+                  <span className={`relative hidden sm:inline ${isActive ? 'text-white' : ''}`}>
+                    {label}
+                  </span>
                 </Link>
               </li>
             );

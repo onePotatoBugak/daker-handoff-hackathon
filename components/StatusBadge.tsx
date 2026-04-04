@@ -1,28 +1,44 @@
 import type { HackathonStatus } from '@/lib/types';
 
-const CONFIG: Record<HackathonStatus, { label: string; className: string }> = {
+const CONFIG: Record<
+  HackathonStatus,
+  { label: string; bg: string; text: string; border: string; dot?: string }
+> = {
   ongoing: {
     label: '진행중',
-    className: 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40',
+    bg: 'rgba(16,185,129,0.1)',
+    text: '#34d399',
+    border: 'rgba(52,211,153,0.25)',
+    dot: '#10b981',
   },
   upcoming: {
     label: '예정',
-    className: 'bg-blue-500/20 text-blue-400 border border-blue-500/40',
+    bg: 'rgba(59,130,246,0.1)',
+    text: '#93c5fd',
+    border: 'rgba(147,197,253,0.25)',
   },
   ended: {
     label: '종료',
-    className: 'bg-slate-700/60 text-slate-400 border border-slate-600/40',
+    bg: 'rgba(100,116,139,0.1)',
+    text: '#94a3b8',
+    border: 'rgba(148,163,184,0.15)',
   },
 };
 
 export default function StatusBadge({ status }: { status: HackathonStatus }) {
-  const { label, className } = CONFIG[status];
+  const c = CONFIG[status];
   return (
-    <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold ${className}`}>
-      {status === 'ongoing' && (
-        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+    <span
+      className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold"
+      style={{ background: c.bg, color: c.text, border: `1px solid ${c.border}` }}
+    >
+      {c.dot && (
+        <span
+          className="w-1.5 h-1.5 rounded-full animate-pulse"
+          style={{ background: c.dot }}
+        />
       )}
-      {label}
+      {c.label}
     </span>
   );
 }

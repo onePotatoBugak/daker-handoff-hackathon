@@ -49,104 +49,145 @@ const NAV_CARDS = [
   },
 ];
 
-/* ── 웨일 스페이스 스타일 블롭 오브젝트 ── */
-function FloatingBlobs() {
+/* ── Whale Space 스타일: 오른쪽 집중 배치 글로시 오브젝트 ── */
+function HeroOrbs() {
   return (
     <>
-      {/* 큰 보라 블롭 - 오른쪽 상단 */}
+      {/* ── 배경 mesh gradient (색감 레이어) ── */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden">
+        {/* 왼쪽 하단: 코랄/핑크 warm */}
+        <div style={{
+          position: 'absolute', bottom: '-20%', left: '-10%',
+          width: '60%', height: '80%',
+          background: 'radial-gradient(ellipse, rgba(249,168,212,0.55) 0%, rgba(244,114,182,0.3) 35%, transparent 65%)',
+          filter: 'blur(55px)',
+        }} />
+        {/* 중앙: 라벤더/보라 */}
+        <div style={{
+          position: 'absolute', top: '10%', left: '20%',
+          width: '55%', height: '70%',
+          background: 'radial-gradient(ellipse, rgba(196,181,253,0.45) 0%, rgba(167,139,250,0.2) 45%, transparent 70%)',
+          filter: 'blur(60px)',
+        }} />
+        {/* 오른쪽 상단: 청록/사이안 cool */}
+        <div style={{
+          position: 'absolute', top: '-15%', right: '-5%',
+          width: '55%', height: '75%',
+          background: 'radial-gradient(ellipse, rgba(125,211,252,0.5) 0%, rgba(56,189,248,0.25) 40%, transparent 68%)',
+          filter: 'blur(55px)',
+        }} />
+      </div>
+
+      {/* ── 메인 오브: 오른쪽 중앙 — 대형 보라/핑크 글로시 구체 ── */}
       <div
         className="blob-float-a absolute pointer-events-none"
         style={{
-          top: '-40px', right: '80px',
-          width: '260px', height: '260px',
+          top: '50%', right: '8%',
+          transform: 'translateY(-50%)',
+          width: '230px', height: '230px',
           borderRadius: '50%',
-          background: 'radial-gradient(circle at 38% 32%, rgba(255,255,255,0.9) 0%, rgba(216,180,254,0.75) 28%, rgba(167,139,250,0.85) 55%, rgba(124,58,237,0.7) 80%, rgba(91,33,182,0.5) 100%)',
-          filter: 'blur(0.5px)',
-          boxShadow: '0 20px 60px rgba(124,58,237,0.25), inset -12px -12px 30px rgba(0,0,0,0.08), inset 6px 6px 20px rgba(255,255,255,0.6)',
-        }}
-      />
-      {/* 핑크/분홍 블롭 - 왼쪽 */}
-      <div
-        className="blob-float-b absolute pointer-events-none"
-        style={{
-          top: '60px', left: '-30px',
-          width: '180px', height: '180px',
-          borderRadius: '50%',
-          background: 'radial-gradient(circle at 38% 32%, rgba(255,255,255,0.92) 0%, rgba(251,207,232,0.8) 25%, rgba(244,114,182,0.8) 55%, rgba(219,39,119,0.65) 80%, rgba(157,23,77,0.45) 100%)',
-          filter: 'blur(0.5px)',
-          boxShadow: '0 16px 50px rgba(219,39,119,0.2), inset -10px -10px 24px rgba(0,0,0,0.07), inset 5px 5px 16px rgba(255,255,255,0.6)',
-        }}
-      />
-      {/* 민트/청록 블롭 - 왼쪽 하단 */}
-      <div
-        className="blob-float-c absolute pointer-events-none"
-        style={{
-          bottom: '-20px', left: '15%',
-          width: '140px', height: '140px',
-          borderRadius: '50%',
-          background: 'radial-gradient(circle at 38% 32%, rgba(255,255,255,0.9) 0%, rgba(167,243,208,0.75) 28%, rgba(52,211,153,0.8) 55%, rgba(16,185,129,0.65) 80%, rgba(5,150,105,0.45) 100%)',
-          filter: 'blur(0.5px)',
-          boxShadow: '0 12px 40px rgba(16,185,129,0.2), inset -8px -8px 20px rgba(0,0,0,0.07), inset 4px 4px 14px rgba(255,255,255,0.6)',
-        }}
-      />
-      {/* 하늘 블롭 - 오른쪽 중간 */}
-      <div
-        className="blob-float-d absolute pointer-events-none"
-        style={{
-          top: '45%', right: '5%',
-          width: '110px', height: '110px',
-          borderRadius: '50%',
-          background: 'radial-gradient(circle at 38% 32%, rgba(255,255,255,0.92) 0%, rgba(186,230,253,0.8) 28%, rgba(56,189,248,0.8) 55%, rgba(2,132,199,0.65) 80%, rgba(7,89,133,0.45) 100%)',
-          filter: 'blur(0.5px)',
-          boxShadow: '0 10px 36px rgba(2,132,199,0.2), inset -7px -7px 18px rgba(0,0,0,0.07), inset 4px 4px 12px rgba(255,255,255,0.6)',
-        }}
-      />
-      {/* 보라 작은 블롭 - 왼쪽 중상단 */}
-      <div
-        className="blob-float-e absolute pointer-events-none"
-        style={{
-          top: '25%', left: '38%',
-          width: '80px', height: '80px',
-          borderRadius: '50%',
-          background: 'radial-gradient(circle at 38% 32%, rgba(255,255,255,0.92) 0%, rgba(237,233,254,0.85) 30%, rgba(196,181,253,0.8) 55%, rgba(139,92,246,0.7) 80%, rgba(109,40,217,0.5) 100%)',
-          filter: 'blur(0.5px)',
-          boxShadow: '0 8px 28px rgba(139,92,246,0.2), inset -5px -5px 14px rgba(0,0,0,0.06), inset 3px 3px 10px rgba(255,255,255,0.65)',
-        }}
-      />
-      {/* 오렌지/살구 블롭 - 오른쪽 하단 */}
-      <div
-        className="blob-float-f absolute pointer-events-none"
-        style={{
-          bottom: '10px', right: '20%',
-          width: '96px', height: '96px',
-          borderRadius: '50%',
-          background: 'radial-gradient(circle at 38% 32%, rgba(255,255,255,0.92) 0%, rgba(253,186,116,0.8) 28%, rgba(249,115,22,0.78) 55%, rgba(234,88,12,0.65) 80%, rgba(194,65,12,0.45) 100%)',
-          filter: 'blur(0.5px)',
-          boxShadow: '0 8px 28px rgba(249,115,22,0.2), inset -5px -5px 14px rgba(0,0,0,0.06), inset 3px 3px 10px rgba(255,255,255,0.6)',
+          background: `
+            radial-gradient(circle at 35% 28%,
+              rgba(255,255,255,0.95) 0%,
+              rgba(243,232,255,0.9) 12%,
+              rgba(216,180,254,0.8) 28%,
+              rgba(167,139,250,0.85) 50%,
+              rgba(124,58,237,0.75) 72%,
+              rgba(91,33,182,0.55) 88%,
+              rgba(76,29,149,0.3) 100%
+            )`,
+          boxShadow: `
+            0 24px 64px rgba(124,58,237,0.35),
+            0 8px 24px rgba(124,58,237,0.2),
+            inset -16px -16px 36px rgba(0,0,0,0.1),
+            inset 8px 8px 24px rgba(255,255,255,0.7)
+          `,
         }}
       />
 
-      {/* 배경 mesh gradient orbs - 은은하게 */}
-      <div className="absolute inset-0 pointer-events-none overflow-hidden">
-        <div style={{
-          position: 'absolute', top: '-10%', right: '-5%',
-          width: '55%', height: '70%',
-          background: 'radial-gradient(ellipse, rgba(216,180,254,0.35) 0%, rgba(196,181,253,0.15) 40%, transparent 70%)',
-          filter: 'blur(40px)',
-        }} />
-        <div style={{
-          position: 'absolute', bottom: '-10%', left: '-5%',
-          width: '50%', height: '60%',
-          background: 'radial-gradient(ellipse, rgba(167,243,208,0.25) 0%, rgba(147,197,253,0.15) 40%, transparent 70%)',
-          filter: 'blur(40px)',
-        }} />
-        <div style={{
-          position: 'absolute', top: '20%', left: '20%',
-          width: '40%', height: '50%',
-          background: 'radial-gradient(ellipse, rgba(251,207,232,0.2) 0%, transparent 65%)',
-          filter: 'blur(50px)',
-        }} />
-      </div>
+      {/* ── 서브 오브 1: 오른쪽 상단 — 소형 하늘/청록 ── */}
+      <div
+        className="blob-float-b absolute pointer-events-none"
+        style={{
+          top: '4%', right: '28%',
+          width: '110px', height: '110px',
+          borderRadius: '50%',
+          background: `
+            radial-gradient(circle at 35% 28%,
+              rgba(255,255,255,0.95) 0%,
+              rgba(224,242,254,0.9) 15%,
+              rgba(125,211,252,0.82) 38%,
+              rgba(56,189,248,0.78) 62%,
+              rgba(2,132,199,0.6) 82%,
+              rgba(3,105,161,0.35) 100%
+            )`,
+          boxShadow: `
+            0 12px 36px rgba(56,189,248,0.3),
+            inset -8px -8px 20px rgba(0,0,0,0.08),
+            inset 5px 5px 14px rgba(255,255,255,0.7)
+          `,
+        }}
+      />
+
+      {/* ── 서브 오브 2: 오른쪽 하단 — 소형 핑크/코랄 ── */}
+      <div
+        className="blob-float-c absolute pointer-events-none"
+        style={{
+          bottom: '8%', right: '24%',
+          width: '80px', height: '80px',
+          borderRadius: '50%',
+          background: `
+            radial-gradient(circle at 35% 28%,
+              rgba(255,255,255,0.95) 0%,
+              rgba(252,231,243,0.9) 15%,
+              rgba(249,168,212,0.82) 38%,
+              rgba(244,114,182,0.78) 62%,
+              rgba(219,39,119,0.6) 82%,
+              rgba(157,23,77,0.35) 100%
+            )`,
+          boxShadow: `
+            0 8px 28px rgba(244,114,182,0.3),
+            inset -6px -6px 16px rgba(0,0,0,0.08),
+            inset 4px 4px 10px rgba(255,255,255,0.7)
+          `,
+        }}
+      />
+
+      {/* ── 서브 오브 3: 텍스트 우측 — 중형 라벤더 (텍스트 방해 안 되는 위치) ── */}
+      <div
+        className="blob-float-d absolute pointer-events-none"
+        style={{
+          top: '18%', right: '38%',
+          width: '64px', height: '64px',
+          borderRadius: '50%',
+          background: `
+            radial-gradient(circle at 35% 28%,
+              rgba(255,255,255,0.95) 0%,
+              rgba(237,233,254,0.9) 20%,
+              rgba(196,181,253,0.82) 45%,
+              rgba(139,92,246,0.7) 72%,
+              rgba(109,40,217,0.45) 100%
+            )`,
+          boxShadow: `
+            0 6px 20px rgba(139,92,246,0.25),
+            inset -4px -4px 12px rgba(0,0,0,0.07),
+            inset 3px 3px 8px rgba(255,255,255,0.7)
+          `,
+        }}
+      />
+
+      {/* ── 배경 후광: 메인 오브 뒤 글로우 ── */}
+      <div
+        className="blob-float-a absolute pointer-events-none"
+        style={{
+          top: '50%', right: '6%',
+          transform: 'translateY(-50%)',
+          width: '310px', height: '310px',
+          borderRadius: '50%',
+          background: 'radial-gradient(circle, rgba(167,139,250,0.18) 0%, rgba(196,181,253,0.08) 50%, transparent 72%)',
+          filter: 'blur(20px)',
+        }}
+      />
     </>
   );
 }
@@ -156,38 +197,59 @@ export default function App() {
     <div className="min-h-screen overflow-x-hidden" style={{ background: '#f8f7ff' }}>
       <Navbar />
 
-      {/* ── Hero 섹션 ── */}
-      <section className="relative overflow-hidden" style={{ minHeight: '520px' }}>
-        {/* 배경: 파스텔 mesh gradient */}
+      {/* ══════════════════════════════════════════
+           Hero 섹션 — Whale Space 스타일
+           코랄·핑크(좌하) → 라벤더(중) → 하늘·청록(우상)
+           대각선 Mesh Gradient + 오른쪽 집중 글로시 오브젝트
+      ══════════════════════════════════════════ */}
+      <section className="relative overflow-hidden" style={{ minHeight: '480px' }}>
+
+        {/* 배경: 대각선 Mesh Gradient ─ 웨일 스페이스 핵심 */}
         <div className="absolute inset-0 pointer-events-none" style={{
-          background: 'linear-gradient(135deg, #ffffff 0%, #f3e8ff 25%, #ede9fe 45%, #e0f2fe 70%, #fdf4ff 90%, #ffffff 100%)',
+          background: `
+            linear-gradient(
+              118deg,
+              #fce7f3 0%,
+              #f9d4eb 8%,
+              #ede9fe 28%,
+              #ddd6fe 45%,
+              #c7d2fe 62%,
+              #bae6fd 78%,
+              #e0f7fa 92%,
+              #f0f9ff 100%
+            )`,
         }} />
 
-        {/* 떠다니는 3D 블롭들 */}
-        <FloatingBlobs />
+        {/* Whale Space 스타일 오브젝트 (오른쪽 집중 배치) */}
+        <HeroOrbs />
 
-        {/* Hero 콘텐츠 */}
-        <div className="relative z-10 max-w-6xl mx-auto px-6 pt-20 pb-24">
-          <div className="max-w-xl">
-            {/* 뱃지 */}
+        {/* Hero 콘텐츠 — 왼쪽 정렬 유지 */}
+        <div className="relative z-10 max-w-6xl mx-auto px-6 pt-16 pb-20">
+          <div className="max-w-lg">
+
+            {/* 배지 */}
             <div
               className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-bold tracking-wider mb-7"
               style={{
-                background: 'rgba(255,255,255,0.7)',
-                border: '1px solid rgba(167,139,250,0.4)',
-                color: '#6d28d9',
-                backdropFilter: 'blur(8px)',
+                background: 'rgba(255,255,255,0.65)',
+                border: '1px solid rgba(167,139,250,0.45)',
+                color: '#5b21b6',
+                backdropFilter: 'blur(10px)',
+                boxShadow: '0 1px 8px rgba(124,58,237,0.1)',
               }}
             >
-              <Star className="w-3.5 h-3.5 fill-violet-400 text-violet-400" />
+              <Star className="w-3.5 h-3.5 fill-violet-500 text-violet-500" />
               HACKATHON PLATFORM
             </div>
 
-            {/* 타이틀 */}
-            <h1 className="text-5xl md:text-6xl font-black leading-tight mb-5" style={{ color: '#1e1b4b' }}>
+            {/* 타이틀: 웨일 스페이스처럼 진한 텍스트 */}
+            <h1
+              className="text-5xl md:text-6xl font-black leading-[1.1] mb-5"
+              style={{ color: '#1e1b4b' }}
+            >
               해커톤을<br />
               <span style={{
-                background: 'linear-gradient(135deg, #7c3aed 0%, #4f46e5 40%, #2563eb 80%)',
+                background: 'linear-gradient(130deg, #7c3aed 0%, #4f46e5 45%, #1d4ed8 100%)',
                 WebkitBackgroundClip: 'text',
                 WebkitTextFillColor: 'transparent',
                 backgroundClip: 'text',
@@ -196,7 +258,7 @@ export default function App() {
               </span>
             </h1>
 
-            <p className="text-base md:text-lg leading-relaxed mb-10" style={{ color: '#6b7280' }}>
+            <p className="text-base md:text-[17px] leading-relaxed mb-10" style={{ color: '#4b5563' }}>
               문서만 남기고 사라진 서비스를 우리 손으로 다시 완성했습니다.<br />
               해커톤 탐색 · 팀 빌딩 · 결과 확인까지 끊기지 않는 흐름.
             </p>
@@ -205,10 +267,10 @@ export default function App() {
             <div className="flex flex-wrap gap-3">
               <Link
                 href="/hackathons"
-                className="flex items-center gap-2 px-7 py-3.5 rounded-2xl font-bold text-sm text-white transition-all hover:scale-105"
+                className="flex items-center gap-2 px-7 py-3.5 rounded-2xl font-bold text-sm text-white transition-all hover:scale-[1.03] active:scale-100"
                 style={{
-                  background: 'linear-gradient(135deg, #7c3aed, #4f46e5)',
-                  boxShadow: '0 4px 20px rgba(124,58,237,0.35)',
+                  background: 'linear-gradient(135deg, #7c3aed 0%, #4f46e5 50%, #3b82f6 100%)',
+                  boxShadow: '0 4px 20px rgba(124,58,237,0.38), 0 1px 4px rgba(0,0,0,0.08)',
                 }}
               >
                 해커톤 시작하기
@@ -216,13 +278,13 @@ export default function App() {
               </Link>
               <Link
                 href="/camp"
-                className="flex items-center gap-2 px-7 py-3.5 rounded-2xl font-bold text-sm transition-all hover:scale-105"
+                className="flex items-center gap-2 px-7 py-3.5 rounded-2xl font-bold text-sm transition-all hover:scale-[1.03] active:scale-100"
                 style={{
-                  background: 'rgba(255,255,255,0.8)',
-                  border: '1px solid rgba(167,139,250,0.4)',
-                  color: '#6d28d9',
-                  backdropFilter: 'blur(8px)',
-                  boxShadow: '0 2px 12px rgba(124,58,237,0.1)',
+                  background: 'rgba(255,255,255,0.72)',
+                  border: '1.5px solid rgba(167,139,250,0.5)',
+                  color: '#5b21b6',
+                  backdropFilter: 'blur(12px)',
+                  boxShadow: '0 2px 12px rgba(124,58,237,0.12)',
                 }}
               >
                 팀원 찾기

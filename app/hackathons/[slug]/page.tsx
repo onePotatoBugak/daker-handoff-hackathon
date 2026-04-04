@@ -1,6 +1,6 @@
 'use client';
 
-import { use, useState, useEffect } from 'react';
+import { use, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
@@ -18,6 +18,8 @@ import {
   ExternalLink,
   Save,
   AlertCircle,
+  FileUp,
+  X,
   BookOpen,
   HelpCircle,
 } from 'lucide-react';
@@ -37,7 +39,7 @@ import {
   getTeamAction,
   setTeamAction,
 } from '@/lib/storage';
-import type { Team, LocalSubmission, LeaderboardEntry, HackathonDetail, HackathonStatus, Leaderboard } from '@/lib/types';
+import type { Team, LocalSubmission, HackathonDetail, HackathonStatus, Leaderboard } from '@/lib/types';
 
 type TabKey =
   | 'overview'
@@ -51,6 +53,23 @@ type TabKey =
 
 const MEDAL: Record<number, string> = { 1: '🥇', 2: '🥈', 3: '🥉' };
 
+type SubmitItem = NonNullable<HackathonDetail['sections']['submit']['submissionItems']>[number];
+
+const FILE_TYPE_FALLBACKS: Record<string, { title: string; accept: string[] }> = {
+  zip: {
+    title: 'ZIP 파일',
+    accept: ['.zip', 'application/zip', 'application/x-zip-compressed'],
+  },
+  pdf: {
+    title: 'PDF 파일',
+    accept: ['.pdf', 'application/pdf'],
+  },
+  csv: {
+    title: 'CSV 파일',
+    accept: ['.csv', 'text/csv'],
+  },
+};
+
 function formatKRW(amount: number) {
   return new Intl.NumberFormat('ko-KR', {
     style: 'currency',
@@ -59,12 +78,71 @@ function formatKRW(amount: number) {
   }).format(amount);
 }
 
+function formatFileSize(size: number) {
+  if (size < 1024) return `${size} B`;
+  if (size < 1024 * 1024) return `${(size / 1024).toFixed(1)} KB`;
+  return `${(size / (1024 * 1024)).toFixed(1)} MB`;
+}
+
+function normalizeSubmitItems(sections: HackathonDetail['sections']['submit']): SubmitItem[] {
+  if (sections.submissionItems?.length) {
+    return sections.submissionItems;
+  }
+
+  return sections.allowedArtifactTypes.map((type) => {
+    const fallback = FILE_TYPE_FALLBACKS[type] ?? {
+      title: `${type.toUpperCase()} 파일`,
+      accept: [`.${type}`],
+    };
+
+    return {
+      key: `${type}File`,
+      title: fallback.title,
+      kind: 'file',
+      accept: fallback.accept,
+    };
+  });
+}
+
+function getArtifact(
+  artifacts: LocalSubmission['artifacts'] | undefined,
+  key: string
+) {
+  return artifacts?.find((artifact) => artifact.key === key);
+}
+
+function migrateLegacyArtifacts(
+  submission: LocalSubmission,
+  items: SubmitItem[]
+): LocalSubmission['artifacts'] {
+  if (submission.artifacts?.length) {
+    return submission.artifacts;
+  }
+
+  const pdfItem = items.find((item) => item.accept.includes('.pdf'));
+  if (submission.pdfUrl && pdfItem) {
+    return [
+      {
+        key: pdfItem.key,
+        title: pdfItem.title,
+        fileName: submission.pdfUrl,
+        fileSize: 0,
+        mimeType: 'legacy/url',
+        lastModified: 0,
+        accept: pdfItem.accept,
+      },
+    ];
+  }
+
+  return [];
+}
+
 function MilestoneTimeline({
   milestones,
 }: {
   milestones: { name: string; at: string }[];
 }) {
-  const now = Date.now();
+  const [now] = useState(() => Date.now());
   return (
     <ol className="relative border-l border-violet-200 ml-3 space-y-6">
       {milestones.map((m, i) => {
@@ -88,11 +166,7 @@ function MilestoneTimeline({
 }
 
 function TeamCard({ team, hackathonStatus }: { team: Team; hackathonStatus: HackathonStatus }) {
-  const [action, setAction] = useState<'applied' | 'accepted' | null>(null);
-
-  useEffect(() => {
-    setAction(getTeamAction(team.teamCode));
-  }, [team.teamCode]);
+  const [action, setAction] = useState<'applied' | 'accepted' | null>(() => getTeamAction(team.teamCode));
 
   function handleApply() {
     if (action === 'applied') {
@@ -155,30 +229,51 @@ function SubmitSection({
   sections: HackathonDetail['sections']['submit'];
   hackathonStatus: HackathonStatus;
 }) {
-  const [draft, setDraft] = useState<LocalSubmission | null>(null);
-  const [form, setForm] = useState({ plan: '', url: '', pdfUrl: '', memo: '' });
-  const [saved, setSaved] = useState<'idle' | 'saving' | 'draft-saved' | 'submitted'>('idle');
-
-  useEffect(() => {
+  const submitItems = useMemo(() => normalizeSubmitItems(sections), [sections]);
+  const [draft, setDraft] = useState<LocalSubmission | null>(() => getSubmissionBySlug(slug));
+  const [form, setForm] = useState<{ artifacts: NonNullable<LocalSubmission['artifacts']>; memo: string }>(() => {
     const existing = getSubmissionBySlug(slug);
-    if (existing) {
-      setDraft(existing);
-      setForm({
-        plan: existing.plan ?? '',
-        url: existing.url ?? '',
-        pdfUrl: existing.pdfUrl ?? '',
-        memo: existing.memo ?? '',
-      });
-      setSaved(existing.status === 'submitted' ? 'submitted' : 'idle');
-    }
-  }, [slug]);
+    return {
+      artifacts: existing ? migrateLegacyArtifacts(existing, submitItems) ?? [] : [],
+      memo: existing?.memo ?? '',
+    };
+  });
+  const [saved, setSaved] = useState<'idle' | 'saving' | 'draft-saved' | 'submitted'>(
+    () => (getSubmissionBySlug(slug)?.status === 'submitted' ? 'submitted' : 'idle')
+  );
 
   function handleSave(status: 'draft' | 'submitted') {
+    if (status === 'submitted') {
+      const missingItems = submitItems.filter((item) => !getArtifact(form.artifacts, item.key));
+      if (missingItems.length > 0) {
+        window.alert(`다음 파일을 먼저 선택하세요: ${missingItems.map((item) => item.title).join(', ')}`);
+        return;
+      }
+    }
+
     setSaved('saving');
     const result = saveSubmission({ hackathonSlug: slug, ...form, status });
     setDraft(result);
     setTimeout(() => setSaved(status === 'submitted' ? 'submitted' : 'draft-saved'), 400);
     if (status === 'draft') setTimeout(() => setSaved('idle'), 2000);
+  }
+
+  function handleFileChange(item: SubmitItem, file: File | null) {
+    setForm((prev) => {
+      const nextArtifacts = prev.artifacts.filter((artifact) => artifact.key !== item.key);
+      if (file) {
+        nextArtifacts.push({
+          key: item.key,
+          title: item.title,
+          fileName: file.name,
+          fileSize: file.size,
+          mimeType: file.type,
+          lastModified: file.lastModified,
+          accept: item.accept,
+        });
+      }
+      return { ...prev, artifacts: nextArtifacts };
+    });
   }
 
   const isEnded = hackathonStatus === 'ended';
@@ -217,33 +312,53 @@ function SubmitSection({
 
       {/* Form */}
       <div className="space-y-4">
-        {sections.submissionItems ? (
-          sections.submissionItems.map((item) => (
-            <div key={item.key}>
-              <label className="block text-sm font-semibold text-slate-700 mb-1.5">{item.title}</label>
-              {item.format === 'text_or_url' ? (
-                <textarea value={form.plan}
-                  onChange={(e) => setForm((p) => ({ ...p, plan: e.target.value }))}
-                  disabled={isSubmitted || isEnded} rows={3} placeholder="기획서 내용 또는 URL을 입력하세요"
-                  className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:border-violet-400 disabled:opacity-50 resize-none" />
+        {submitItems.map((item) => {
+          const artifact = getArtifact(form.artifacts, item.key);
+
+          return (
+            <div key={item.key} className="rounded-xl border border-slate-200 bg-white p-4">
+              <div className="flex items-start justify-between gap-3 mb-3">
+                <div>
+                  <label className="block text-sm font-semibold text-slate-700">{item.title}</label>
+                  <p className="text-xs text-slate-400 mt-1">허용 형식: {item.accept.join(', ')}</p>
+                  {item.description && <p className="text-xs text-slate-500 mt-1">{item.description}</p>}
+                </div>
+                <FileUp className="w-4 h-4 text-violet-500 shrink-0 mt-0.5" />
+              </div>
+
+              <input
+                type="file"
+                accept={item.accept.join(',')}
+                disabled={isSubmitted || isEnded}
+                onChange={(e) => handleFileChange(item, e.target.files?.[0] ?? null)}
+                className="block w-full text-sm text-slate-600 file:mr-3 file:rounded-lg file:border-0 file:bg-violet-50 file:px-3 file:py-2 file:text-sm file:font-semibold file:text-violet-700 hover:file:bg-violet-100 disabled:opacity-50"
+              />
+
+              {artifact ? (
+                <div className="mt-3 flex items-center justify-between gap-3 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2">
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-semibold text-emerald-800">{artifact.fileName}</p>
+                    <p className="text-xs text-emerald-600">
+                      {artifact.fileSize > 0 ? formatFileSize(artifact.fileSize) : '기존 저장 파일'} · {artifact.mimeType || '형식 미확인'}
+                    </p>
+                  </div>
+                  {!isSubmitted && !isEnded && (
+                    <button
+                      type="button"
+                      onClick={() => handleFileChange(item, null)}
+                      className="inline-flex items-center gap-1 text-xs font-semibold text-emerald-700 hover:text-emerald-900"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                      제거
+                    </button>
+                  )}
+                </div>
               ) : (
-                <input type="url"
-                  value={item.key === 'web' ? form.url : form.pdfUrl}
-                  onChange={(e) => setForm((p) => item.key === 'web' ? { ...p, url: e.target.value } : { ...p, pdfUrl: e.target.value })}
-                  disabled={isSubmitted || isEnded} placeholder="https://"
-                  className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:border-violet-400 disabled:opacity-50" />
+                <p className="mt-2 text-xs text-slate-400">선택된 파일이 없습니다.</p>
               )}
             </div>
-          ))
-        ) : (
-          <div>
-            <label className="block text-sm font-semibold text-slate-700 mb-1.5">제출물 URL / 파일명</label>
-            <input type="text" value={form.url}
-              onChange={(e) => setForm((p) => ({ ...p, url: e.target.value }))}
-              disabled={isSubmitted || isEnded} placeholder="제출물 URL 또는 파일명 입력"
-              className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:border-violet-400 disabled:opacity-50" />
-          </div>
-        )}
+          );
+        })}
 
         <div>
           <label className="block text-sm font-semibold text-slate-700 mb-1.5">메모 (선택)</label>
@@ -717,7 +832,7 @@ export default function HackathonDetailPage({
             {activeTab === 'submit' && (
               <div className="space-y-4">
                 <h2 className="text-xl font-black text-slate-800">제출</h2>
-                <SubmitSection slug={slug} sections={sections.submit} hackathonStatus={hackathon.status} />
+                <SubmitSection key={slug} slug={slug} sections={sections.submit} hackathonStatus={hackathon.status} />
               </div>
             )}
 

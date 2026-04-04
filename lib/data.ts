@@ -162,6 +162,15 @@ export const HACKATHON_DETAILS: Record<string, HackathonDetail> = {
           '제출물은 규정에 맞는 단일 zip 파일로 업로드합니다.',
           "업로드 후 '제출' 버튼을 눌러야 리더보드에 반영됩니다.",
         ],
+        submissionItems: [
+          {
+            key: 'solutionZip',
+            title: '제출 패키지 ZIP',
+            kind: 'file',
+            accept: ['.zip', 'application/zip', 'application/x-zip-compressed'],
+            description: '실행 가능한 산출물을 하나의 zip 파일로 압축해 업로드하세요.',
+          },
+        ],
       },
       leaderboard: {
         publicLeaderboardUrl: '/hackathons/aimers-8-model-lite#leaderboard',
@@ -274,15 +283,20 @@ export const HACKATHON_DETAILS: Record<string, HackathonDetail> = {
         listUrl: '/camp?hackathon=monthly-vibe-coding-2026-02',
       },
       submit: {
-        allowedArtifactTypes: ['url', 'pdf'],
+        allowedArtifactTypes: ['pdf'],
         submissionUrl: '/hackathons/monthly-vibe-coding-2026-02#submit',
         guide: [
-          '프로토타입 URL과 발표 자료(PDF)를 함께 제출합니다.',
+          '발표 자료를 PDF 파일로 업로드합니다.',
           'PDF는 아이디어 설명, 구현 내용, 기대 효과를 포함해야 합니다.',
         ],
         submissionItems: [
-          { key: 'web', title: '프로토타입 URL', format: 'url' },
-          { key: 'pdf', title: '발표 자료 PDF', format: 'pdf_url' },
+          {
+            key: 'ideaDeck',
+            title: '발표 자료 PDF',
+            kind: 'file',
+            accept: ['.pdf', 'application/pdf'],
+            description: '아이디어 소개 자료를 PDF 한 개로 제출하세요.',
+          },
         ],
       },
       leaderboard: {
@@ -405,17 +419,35 @@ export const HACKATHON_DETAILS: Record<string, HackathonDetail> = {
         listUrl: '/camp?hackathon=daker-handover-2026-03',
       },
       submit: {
-        allowedArtifactTypes: ['text', 'url', 'pdf'],
+        allowedArtifactTypes: ['zip', 'pdf', 'csv'],
         submissionUrl: '/hackathons/daker-handover-2026-03#submit',
         guide: [
-          '기획서 → 웹링크 → PDF를 단계별로 제출합니다.',
-          '배포 URL은 외부에서 접속 가능해야 하며 심사 기간 동안 접근 가능해야 합니다.',
-          'PPT는 PDF로 변환하여 제출합니다.',
+          '최종 산출물은 zip, PDF, CSV 파일로 제출합니다.',
+          'zip에는 실행에 필요한 앱 산출물을 포함하고, PPT는 PDF로 변환해 제출합니다.',
+          'CSV에는 시연 또는 평가에 필요한 보조 데이터를 포함하세요.',
         ],
         submissionItems: [
-          { key: 'plan', title: '기획서(1차 제출)', format: 'text_or_url' },
-          { key: 'web', title: '최종 웹링크 제출', format: 'url' },
-          { key: 'pdf', title: '최종 솔루션 PDF 제출', format: 'pdf_url' },
+          {
+            key: 'deliverableZip',
+            title: '최종 산출물 ZIP',
+            kind: 'file',
+            accept: ['.zip', 'application/zip', 'application/x-zip-compressed'],
+            description: '소스 또는 실행 산출물을 zip으로 압축해 제출하세요.',
+          },
+          {
+            key: 'solutionPdf',
+            title: '최종 솔루션 PDF',
+            kind: 'file',
+            accept: ['.pdf', 'application/pdf'],
+            description: '발표 자료 또는 명세 설명 문서를 PDF로 제출하세요.',
+          },
+          {
+            key: 'resultCsv',
+            title: '결과 데이터 CSV',
+            kind: 'file',
+            accept: ['.csv', 'text/csv'],
+            description: '평가나 검토에 필요한 데이터가 있으면 CSV로 제출하세요.',
+          },
         ],
       },
       leaderboard: {

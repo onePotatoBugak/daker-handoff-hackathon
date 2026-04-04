@@ -2,13 +2,30 @@
 
 import { useState, useEffect } from 'react';
 import { X, ChevronDown, ChevronUp, BookOpen, HelpCircle } from 'lucide-react';
-import type { HackathonDetail } from '@/lib/types';
+
+interface FAQItem {
+  question: string;
+  answer: string;
+}
+
+interface FAQContent {
+  items: FAQItem[];
+}
+
+interface RulesSection {
+  title: string;
+  items: string[];
+}
+
+interface RulesContent {
+  sections: RulesSection[];
+}
 
 interface InfoPanelProps {
   open: boolean;
   type: 'faq' | 'rules';
-  faq?: HackathonDetail['sections']['info']['faq'];
-  rules?: HackathonDetail['sections']['info']['rules'];
+  faq?: FAQContent;
+  rules?: RulesContent;
   onClose: () => void;
 }
 

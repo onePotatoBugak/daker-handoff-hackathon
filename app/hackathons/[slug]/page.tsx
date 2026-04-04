@@ -18,8 +18,11 @@ import {
   ExternalLink,
   Save,
   AlertCircle,
+  BookOpen,
+  HelpCircle,
 } from 'lucide-react';
 import Navbar from '@/components/Navbar';
+import InfoPanel from '@/components/InfoPanel';
 import StatusBadge from '@/components/StatusBadge';
 import CountdownTimer from '@/components/CountdownTimer';
 import EmptyState from '@/components/EmptyState';
@@ -406,6 +409,8 @@ export default function HackathonDetailPage({
   const { slug } = use(params);
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<TabKey>('overview');
+  const [panelOpen, setPanelOpen] = useState(false);
+  const [panelType, setPanelType] = useState<'faq' | 'rules'>('faq');
 
   const { data, loading, error, retry } = useAsync(() => fetchHackathonDetail(slug));
 
@@ -582,21 +587,23 @@ export default function HackathonDetailPage({
                   ))}
                 </ul>
                 <div className="flex gap-3 mt-2">
-                  {sections.info.links?.rules ? (
-                    <a href={sections.info.links.rules} target="_blank" rel="noopener noreferrer"
+                  {sections.info.rules ? (
+                    <button
+                      onClick={() => { setPanelType('rules'); setPanelOpen(true); }}
                       className="flex items-center gap-1.5 text-sm font-semibold px-4 py-2 rounded-xl transition-all hover:scale-105 bg-violet-50 text-violet-700 border border-violet-200">
-                      <ExternalLink className="w-3.5 h-3.5" />규정 보기
-                    </a>
+                      <BookOpen className="w-3.5 h-3.5" />규정 보기
+                    </button>
                   ) : (
                     <span className="flex items-center gap-1.5 text-sm font-semibold px-4 py-2 rounded-xl bg-slate-50 text-slate-400 border border-slate-200 cursor-not-allowed opacity-60">
                       규정 보기 (준비 중)
                     </span>
                   )}
-                  {sections.info.links?.faq ? (
-                    <a href={sections.info.links.faq} target="_blank" rel="noopener noreferrer"
+                  {sections.info.faq ? (
+                    <button
+                      onClick={() => { setPanelType('faq'); setPanelOpen(true); }}
                       className="flex items-center gap-1.5 text-sm font-semibold px-4 py-2 rounded-xl transition-all hover:scale-105 bg-violet-50 text-violet-700 border border-violet-200">
-                      <ExternalLink className="w-3.5 h-3.5" />FAQ 보기
-                    </a>
+                      <HelpCircle className="w-3.5 h-3.5" />FAQ 보기
+                    </button>
                   ) : (
                     <span className="flex items-center gap-1.5 text-sm font-semibold px-4 py-2 rounded-xl bg-slate-50 text-slate-400 border border-slate-200 cursor-not-allowed opacity-60">
                       FAQ 보기 (준비 중)
@@ -722,6 +729,13 @@ export default function HackathonDetailPage({
             )}
         </div>
       </main>
+      <InfoPanel
+        open={panelOpen}
+        type={panelType}
+        faq={sections.info.faq}
+        rules={sections.info.rules}
+        onClose={() => setPanelOpen(false)}
+      />
     </div>
   );
 }

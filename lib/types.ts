@@ -31,9 +31,11 @@ export interface HackathonDetail {
     };
     info: {
       notice: string[];
-      links?: {
-        rules?: string;
-        faq?: string;
+      faq?: {
+        items: Array<{ question: string; answer: string }>;
+      };
+      rules?: {
+        sections: Array<{ title: string; items: string[] }>;
       };
     };
     eval: {

@@ -1,5 +1,13 @@
 import type { Hackathon, HackathonDetail, Team, Leaderboard } from './types';
 
+/**
+ * 시드 데이터 단일 출처 (Single source of truth).
+ *
+ * - `HACKATHONS[].status` 가 앱에서 보는 해커톤 상태의 기준이다.
+ *   원본 예시 JSON·기획서의 문구와 다를 수 있으며, `period` 날짜로 런타임에 자동 계산하지 않는다.
+ * - 목록/상세 배지, 팀(초대·지원), 제출 마감 UI 등은 모두 이 필드를 따른다.
+ * - 진행 중(ongoing) 시나리오 테스트용 고정 slug: `daker-handover-2026-03`
+ */
 export const HACKATHONS: Hackathon[] = [
   {
     slug: 'aimers-8-model-lite',

@@ -143,7 +143,7 @@ export function getLocalLeaderboardBySlug(slug: string): LocalLeaderboardEntry[]
 
 // ── Team Actions (지원 상태) ────────────────────────────────────────────────
 
-export type TeamAction = 'applied' | 'accepted';
+export type TeamAction = 'invited' | 'applied' | 'accepted' | 'rejected';
 
 export function getTeamAction(teamCode: string): TeamAction | null {
   const actions = safeGet<Record<string, TeamAction>>(KEYS.TEAM_ACTIONS, {});

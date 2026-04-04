@@ -29,6 +29,8 @@ import {
   getSubmissionBySlug,
   saveSubmission,
   getLocalLeaderboardBySlug,
+  getTeamAction,
+  setTeamAction,
 } from '@/lib/storage';
 import type { Team, LocalSubmission, LeaderboardEntry, HackathonDetail } from '@/lib/types';
 
@@ -98,12 +100,10 @@ function TeamCard({ team }: { team: Team }) {
   const [action, setAction] = useState<'applied' | 'accepted' | null>(null);
 
   useEffect(() => {
-    const { getTeamAction } = require('@/lib/storage');
     setAction(getTeamAction(team.teamCode));
   }, [team.teamCode]);
 
   function handleApply() {
-    const { setTeamAction } = require('@/lib/storage');
     if (action === 'applied') {
       setTeamAction(team.teamCode, null);
       setAction(null);

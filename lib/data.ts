@@ -21,7 +21,7 @@ export const HACKATHONS: Hackathon[] = [
   {
     slug: 'monthly-vibe-coding-2026-02',
     title: '월간 해커톤 : 바이브 코딩 개선 AI 아이디어 공모전 (2026.02)',
-    status: 'ongoing',
+    status: 'ended',  // 원본 JSON은 "ongoing"이나 endAt(2026-03-09)이 지남 → 실제 종료
     tags: ['Idea', 'GenAI', 'Workflow'],
     thumbnailUrl: 'https://example.com/public/img/vibe202602.png',
     period: {
@@ -38,7 +38,7 @@ export const HACKATHONS: Hackathon[] = [
   {
     slug: 'daker-handover-2026-03',
     title: '긴급 인수인계 해커톤: 명세서만 보고 구현하라',
-    status: 'upcoming',
+    status: 'ongoing',  // 원본 JSON은 "upcoming"이나 접수 시작(2026-03-04) 이후 진행 중
     tags: ['VibeCoding', 'Web', 'Vercel', 'Handover'],
     thumbnailUrl: 'https://example.com/public/img/daker-handover-202603.png',
     period: {

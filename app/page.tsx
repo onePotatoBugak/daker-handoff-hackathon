@@ -422,21 +422,6 @@ export default function App() {
             {/* ── 네비게이션 카드 ── */}
             <section className="py-12 px-6">
                 <div className="max-w-6xl mx-auto">
-                    <div className="text-center mb-10">
-                        <p
-                            className="text-xs font-bold tracking-[0.3em] uppercase mb-2"
-                            style={{ color: "#a78bfa" }}
-                        >
-                            EXPLORE
-                        </p>
-                        <h2
-                            className="text-3xl font-black"
-                            style={{ color: "#1e1b4b" }}
-                        >
-                            무엇을 원하시나요?
-                        </h2>
-                    </div>
-
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                         {NAV_CARDS.map((card) => (
                             <Link

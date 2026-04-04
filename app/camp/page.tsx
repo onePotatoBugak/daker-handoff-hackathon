@@ -10,6 +10,7 @@ import { SkeletonCard } from '@/components/LoadingState';
 import ErrorState from '@/components/ErrorState';
 import { fetchCampData } from '@/lib/api';
 import { getTeams, addTeam, updateTeam, updateTeamOpenStatus, getTeamAction, setTeamAction } from '@/lib/storage';
+import type { TeamAction } from '@/lib/storage';
 import { useAsync } from '@/hooks/useAsync';
 import type { Hackathon, Team } from '@/lib/types';
 
@@ -26,7 +27,7 @@ function TeamCard({
   onStatusChange: () => void;
   onEdit: (team: Team) => void;
 }) {
-  const [action, setActionState] = useState<'applied' | 'accepted' | null>(null);
+  const [action, setActionState] = useState<TeamAction | null>(null);
 
   useEffect(() => {
     setActionState(getTeamAction(team.teamCode));

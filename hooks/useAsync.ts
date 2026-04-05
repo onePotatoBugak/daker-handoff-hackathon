@@ -11,7 +11,9 @@ interface AsyncState<T> {
 export function useAsync<T>(fetchFn: () => Promise<T>): AsyncState<T> & { retry: () => void } {
   const [state, setState] = useState<AsyncState<T>>({ data: null, loading: true, error: null });
   const fnRef = useRef(fetchFn);
-  fnRef.current = fetchFn;
+  useEffect(() => {
+    fnRef.current = fetchFn;
+  }, [fetchFn]);
 
   const run = useCallback(() => {
     setState({ data: null, loading: true, error: null });

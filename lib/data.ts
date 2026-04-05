@@ -1,4 +1,4 @@
-import type { Hackathon, HackathonDetail, Team, Leaderboard } from './types';
+import type { Hackathon, HackathonDetail, Team, Leaderboard, User } from './types';
 
 /**
  * 시드 데이터 단일 출처 (Single source of truth).

@@ -11,7 +11,14 @@ interface CountdownTimerProps {
 export default function CountdownTimer({ deadline, label }: CountdownTimerProps) {
   const [timeLeft, setTimeLeft] = useState<{
     days: number; hours: number; minutes: number; expired: boolean;
-  } | null>(null);
+  } | null>(() => {
+    const diff = new Date(deadline).getTime() - Date.now();
+    if (diff <= 0) return { days: 0, hours: 0, minutes: 0, expired: true };
+    const days = Math.floor(diff / 86_400_000);
+    const hours = Math.floor((diff % 86_400_000) / 3_600_000);
+    const minutes = Math.floor((diff % 3_600_000) / 60_000);
+    return { days, hours, minutes, expired: false };
+  });
 
   useEffect(() => {
     function calc() {
@@ -22,7 +29,6 @@ export default function CountdownTimer({ deadline, label }: CountdownTimerProps)
       const minutes = Math.floor((diff % 3_600_000) / 60_000);
       return { days, hours, minutes, expired: false };
     }
-    setTimeLeft(calc());
     const id = setInterval(() => setTimeLeft(calc()), 60_000);
     return () => clearInterval(id);
   }, [deadline]);

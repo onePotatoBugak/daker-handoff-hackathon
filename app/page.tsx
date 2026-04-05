@@ -7,7 +7,6 @@ import {
     Rocket,
     ChevronRight,
     ArrowRight,
-    Star,
 } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import StatusBadge from "@/components/StatusBadge";

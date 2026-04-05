@@ -27,11 +27,7 @@ function TeamCard({
   onStatusChange: () => void;
   onEdit: (team: Team) => void;
 }) {
-  const [action, setActionState] = useState<TeamAction | null>(null);
-
-  useEffect(() => {
-    setActionState(getTeamAction(team.teamCode));
-  }, [team.teamCode]);
+  const [action, setActionState] = useState<TeamAction | null>(() => getTeamAction(team.teamCode));
 
   function handleApply() {
     if (action === 'applied') {
@@ -258,7 +254,7 @@ function TeamForm({
               <option value="true">모집 중</option>
               <option value="false">모집 마감</option>
             </select>
-            <p className="text-[11px] text-slate-400 mt-1 ml-1">팀원 모집을 잠시 멈추려면 '모집 마감'으로 설정하세요.</p>
+            <p className="text-[11px] text-slate-400 mt-1 ml-1">팀원 모집을 잠시 멈추려면 &apos;모집 마감&apos;으로 설정하세요.</p>
           </div>
           <div>
             <label className="block text-sm font-semibold text-slate-700 mb-1.5">
@@ -329,30 +325,34 @@ function TeamForm({
 function CampContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const hackathonFilter = searchParams.get('hackathon') ?? 'all';
-
   const { data, loading, error, retry } = useAsync(fetchCampData);
-  const [teams, setTeams] = useState<Team[]>([]);
-  const [selectedHackathon, setSelectedHackathon] = useState<string>(hackathonFilter);
+
+  const [selectedHackathon, setSelectedHackathon] = useState<string>(() => searchParams.get('hackathon') ?? 'all');
+  const [prevSearchParams, setPrevSearchParams] = useState(searchParams);
+
+  if (searchParams !== prevSearchParams) {
+    setPrevSearchParams(searchParams);
+    const h = searchParams.get('hackathon') ?? 'all';
+    if (selectedHackathon !== h) {
+      setSelectedHackathon(h);
+    }
+  }
+
   const [positionFilter, setPositionFilter] = useState<string>('all');
   const [openOnly, setOpenOnly] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const [showPrecaution, setShowPrecaution] = useState(false);
   const [editTarget, setEditTarget] = useState<Team | undefined>(undefined);
 
-  // URL 파라미터 변경 감지 및 상태 동기화
-  useEffect(() => {
-    const h = searchParams.get('hackathon') ?? 'all';
-    setSelectedHackathon(h);
-  }, [searchParams]);
+  const hackathons = useMemo(() => data?.hackathons ?? [], [data]);
+  const positions = useMemo(() => data?.positions ?? [], [data]);
 
-  // 데이터 로드 완료 후 teams 초기화
-  useEffect(() => {
-    if (data) setTeams(data.teams);
-  }, [data]);
+  const [localTeams, setLocalTeams] = useState<Team[]>([]);
+  const teams = useMemo(() => {
+    if (localTeams.length > 0) return localTeams;
+    return data?.teams ?? [];
+  }, [data, localTeams]);
 
-  const hackathons = data?.hackathons ?? [];
-  const positions = data?.positions ?? [];
   const availableHackathons = useMemo(
     () => hackathons.filter((hackathon) => hackathon.status !== 'ended'),
     [hackathons]
@@ -367,7 +367,7 @@ function CampContent() {
   );
 
   function refreshTeams() {
-    setTeams(getTeams());
+    setLocalTeams(getTeams());
   }
 
   // 필터 변경 핸들러: URL도 함께 업데이트

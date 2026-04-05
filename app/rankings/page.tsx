@@ -85,9 +85,9 @@ export default function RankingsPage() {
     const [period, setPeriod] = useState<Period>("all");
     const [selectedSlug, setSelectedSlug] = useState<string>("");
 
-    const hackathons = data?.hackathons ?? [];
-    const leaderboards = data?.leaderboards ?? {};
-    const localEntries = data?.localEntries ?? [];
+    const hackathons = useMemo(() => data?.hackathons ?? [], [data]);
+    const leaderboards = useMemo(() => data?.leaderboards ?? {}, [data]);
+    const localEntries = useMemo(() => data?.localEntries ?? [], [data]);
 
     // selectedSlug 초기화: 데이터 로드 후 첫 번째 leaderboard slug로 설정
     const resolvedSlug = selectedSlug || Object.keys(leaderboards)[0] || "";

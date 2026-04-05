@@ -31,10 +31,12 @@ interface InfoPanelProps {
 
 export default function InfoPanel({ open, type, faq, rules, onClose }: InfoPanelProps) {
   const [openIndex, setOpenIndex] = useState<number | null>(null);
+  const [prevType, setPrevType] = useState(type);
 
-  useEffect(() => {
+  if (type !== prevType) {
+    setPrevType(type);
     setOpenIndex(null);
-  }, [type]);
+  }
 
   useEffect(() => {
     document.body.style.overflow = open ? 'hidden' : '';

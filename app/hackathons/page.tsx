@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo } from 'react';
 import Link from 'next/link';
-import { SlidersHorizontal, Users, ArrowRight, Tag, Clock } from 'lucide-react';
+import { Users, ArrowRight, Tag, Clock } from 'lucide-react';
 import Navbar from '@/components/Navbar';
 import StatusBadge from '@/components/StatusBadge';
 import CountdownTimer from '@/components/CountdownTimer';
@@ -34,11 +34,7 @@ export default function HackathonsPage() {
   const [statusFilter, setStatusFilter] = useState<HackathonStatus | 'all'>('all');
   const [tagFilter, setTagFilter] = useState<string>('all');
   const [sort, setSort] = useState<SortKey>('deadline');
-  const [allTeams, setAllTeams] = useState<Team[]>([]);
-
-  useEffect(() => {
-    setAllTeams(getTeams());
-  }, []);
+  const [allTeams] = useState<Team[]>(() => getTeams());
 
   function getTeamCount(slug: string) {
     return allTeams.filter((t) => t.hackathonSlug === slug).length;

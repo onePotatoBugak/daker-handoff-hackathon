@@ -58,7 +58,7 @@ function TeamCard({
               {hackathon.title}
             </Link>
           ) : (
-            <span className="text-xs text-slate-400 mt-0.5 block">해커톤 미연결</span>
+            <span className="text-xs text-slate-400 mt-0.5 block">해커톤 미지정</span>
           )}
         </div>
         <div className="flex flex-col items-end gap-1 shrink-0">
@@ -434,20 +434,13 @@ function CampContent() {
       )}
 
       <main className="max-w-6xl mx-auto px-4 py-10">
-        <div className="flex items-start justify-between mb-8">
-          <div>
-            <p className="text-xs text-violet-400 uppercase tracking-[0.3em] font-bold mb-2">TEAM FINDER</p>
-            <h1 className="text-4xl font-black text-slate-800">팀 찾기</h1>
-            <p className="text-slate-500 text-sm mt-1.5">
-              총 <span className="text-violet-700 font-semibold">{visibleTeams.length}개</span> 팀 ·
-              조건에 맞는 <span className="text-violet-700 font-semibold">{filtered.length}개</span> 표시 중
-            </p>
-          </div>
-          <button onClick={openCreate}
-            className="flex items-center gap-2 px-5 py-2.5 text-white text-sm rounded-xl transition-all font-semibold hover:scale-105 shadow-md"
-            style={{ background: 'linear-gradient(135deg, #6d28d9, #4f46e5)' }}>
-            <Plus className="w-4 h-4" />팀 만들기
-          </button>
+        <div className="mb-8">
+          <p className="text-xs text-violet-400 uppercase tracking-[0.3em] font-bold mb-2">TEAM FINDER</p>
+          <h1 className="text-4xl font-black text-slate-800">팀 찾기</h1>
+          <p className="text-slate-500 text-sm mt-1.5">
+            총 <span className="text-violet-700 font-semibold">{visibleTeams.length}개</span> 팀 ·
+            조건에 맞는 <span className="text-violet-700 font-semibold">{filtered.length}개</span> 표시 중
+          </p>
         </div>
 
         <div className="flex flex-wrap items-center gap-3 mb-7 p-5 rounded-2xl bg-white border border-violet-100 shadow-sm">
@@ -455,7 +448,6 @@ function CampContent() {
             className="text-sm px-3 py-1.5 rounded-lg cursor-pointer focus:outline-none"
             style={{ background: '#f5f3ff', color: '#64748b', border: '1px solid #e2e8f0' }}>
             <option value="all">전체 해커톤</option>
-            <option value="none">해커톤 미연결</option>
             {availableHackathons.map((h) => <option key={h.slug} value={h.slug}>{h.title}</option>)}
           </select>
 

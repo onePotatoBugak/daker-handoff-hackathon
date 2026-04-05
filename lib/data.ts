@@ -410,3 +410,9 @@ export const ALL_POSITIONS = [
   'Data Analyst',
   'Full Stack',
 ];
+
+export const DUMMY_USERS: User[] = [
+  { id: 'user-1', name: '이강인', position: 'Frontend', avatarUrl: 'https://example.com/avatar1.png' },
+  { id: 'user-2', name: '손흥민', position: 'Backend', avatarUrl: 'https://example.com/avatar2.png' },
+  { id: 'user-3', name: '박상진', position: 'Full Stack', avatarUrl: 'https://example.com/avatar3.png' },
+];

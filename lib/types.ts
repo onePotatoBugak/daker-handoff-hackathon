@@ -127,6 +127,13 @@ export interface Leaderboard {
   entries: LeaderboardEntry[];
 }
 
+export interface User {
+  id: string;
+  name: string;
+  position: string;
+  avatarUrl?: string;
+}
+
 export interface LocalSubmission {
   id: string;
   hackathonSlug: string;

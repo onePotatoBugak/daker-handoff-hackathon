@@ -30,6 +30,7 @@ import EmptyState from '@/components/EmptyState';
 import { SkeletonRow } from '@/components/LoadingState';
 import ErrorState from '@/components/ErrorState';
 import { fetchHackathonDetail } from '@/lib/api';
+import { DUMMY_USERS } from '@/lib/data';
 import { useAsync } from '@/hooks/useAsync';
 import {
   getSubmissionBySlug,
@@ -37,9 +38,10 @@ import {
   getLocalLeaderboardBySlug,
   getTeamAction,
   setTeamAction,
+  updateTeam as updateTeamStorage,
 } from '@/lib/storage';
 import type { TeamAction } from '@/lib/storage';
-import type { Team, LocalSubmission, HackathonDetail, HackathonStatus, Leaderboard } from '@/lib/types';
+import type { Team, LocalSubmission, HackathonDetail, HackathonStatus, Leaderboard, User } from '@/lib/types';
 
 type TabKey =
   | 'overview'
@@ -208,10 +210,13 @@ function TeamCard({
   disableAccept?: boolean;
 }) {
   const isEnded = hackathonStatus === 'ended';
-  const isPending = action === 'invited' || action === 'applied';
+  
+  // 초대를 받았을 때만 수락/거절 버튼이 보임
+  const canRespond = action === 'invited';
+  const isApplied = action === 'applied';
 
   return (
-    <div className={`light-card p-4 transition-all ${action === 'invited' ? 'ring-2 ring-violet-300' : ''}`}>
+    <div className={`light-card p-4 transition-all ${action === 'invited' ? 'ring-2 ring-violet-300 bg-violet-50/30' : ''}`}>
       <div className="flex items-start justify-between mb-2">
         <h3 className="font-semibold text-slate-800">{team.name}</h3>
         {hackathonStatus !== 'ended' && (
@@ -227,7 +232,15 @@ function TeamCard({
       {action === 'invited' && (
         <div className="flex items-center gap-1.5 text-xs font-semibold text-violet-700 bg-violet-50 border border-violet-200 rounded-lg px-3 py-1.5 mb-3">
           <UserPlus className="w-3.5 h-3.5 shrink-0" />
-          이 팀에서 초대가 왔습니다
+          이 팀에서 초대가 왔습니다!
+        </div>
+      )}
+
+      {/* 지원 중 배너 */}
+      {action === 'applied' && (
+        <div className="flex items-center gap-1.5 text-xs font-semibold text-amber-600 bg-amber-50 border border-amber-200 rounded-lg px-3 py-1.5 mb-3">
+          <Clock className="w-3.5 h-3.5 shrink-0" />
+          팀장의 승인을 기다리는 중입니다
         </div>
       )}
 
@@ -255,11 +268,8 @@ function TeamCard({
             <XCircle className="w-3 h-3" />거절됨
           </span>
 
-        ) : isPending ? (
+        ) : canRespond ? (
           <div className="flex items-center gap-2">
-            <span className="text-xs text-amber-500 font-medium">
-              {action === 'invited' ? '초대 대기 중' : '지원 검토 중'}
-            </span>
             <button onClick={onAccept}
               disabled={disableAccept}
               className={`flex items-center gap-1 text-xs px-2.5 py-1 rounded-lg font-semibold transition-all ${
@@ -274,6 +284,11 @@ function TeamCard({
               <XCircle className="w-3 h-3" />거절
             </button>
           </div>
+
+        ) : isApplied ? (
+          <span className="text-xs text-amber-500 font-bold bg-amber-50 px-2 py-1 rounded-lg border border-amber-100">
+            지원 검토 중
+          </span>
 
         ) : team.isLocal ? (
           <span className="inline-flex items-center gap-1 text-xs font-bold text-violet-600 bg-violet-50 border border-violet-200 px-2.5 py-1 rounded-full">
@@ -305,17 +320,19 @@ function TeamCard({
   );
 }
 
-/* ── MyTeamCompositionCard: 팀 선택 초대 흐름 ── */
+/* ── MyTeamCompositionCard: 유저 선택 초대 흐름 ── */
 function MyTeamCompositionCard({
   team,
   hackathonStatus,
-  invitableTeams,
+  invitableUsers,
+  invitedUserIds,
   onInvite,
 }: {
   team: Team;
   hackathonStatus: HackathonStatus;
-  invitableTeams: Team[];
-  onInvite: (teamCode: string) => void;
+  invitableUsers: User[];
+  invitedUserIds: string[];
+  onInvite: (userId: string) => void;
 }) {
   const [showMenu, setShowMenu] = useState(false);
 
@@ -357,22 +374,37 @@ function MyTeamCompositionCard({
 
       {showMenu && (
         <div className="mt-4 border-t border-violet-100 pt-3 space-y-2">
-          <p className="text-xs font-semibold text-slate-500 mb-1">초대할 팀을 선택하세요</p>
-          {invitableTeams.length === 0 ? (
-            <p className="text-xs text-slate-400 py-2">초대 가능한 팀이 없습니다.</p>
+          <p className="text-xs font-semibold text-slate-500 mb-1">초대할 유저를 선택하세요</p>
+          {invitableUsers.length === 0 ? (
+            <p className="text-xs text-slate-400 py-2">초대 가능한 유저가 없습니다.</p>
           ) : (
-            invitableTeams.map((t) => (
-              <button
-                key={t.teamCode}
-                onClick={() => { onInvite(t.teamCode); setShowMenu(false); }}
-                className="w-full flex items-center justify-between text-left text-xs px-3 py-2 rounded-lg bg-white border border-violet-100 hover:border-violet-300 hover:bg-violet-50 transition-all"
-              >
-                <span className="font-semibold text-slate-700">{t.name}</span>
-                <span className="text-violet-500 font-semibold flex items-center gap-1">
-                  <UserPlus className="w-3 h-3" />초대 발송
-                </span>
-              </button>
-            ))
+            invitableUsers.map((u) => {
+              const isInvited = invitedUserIds.includes(u.id);
+              return (
+                <button
+                  key={u.id}
+                  disabled={isInvited}
+                  onClick={() => { onInvite(u.id); setShowMenu(false); }}
+                  className={`w-full flex items-center justify-between text-left text-xs px-3 py-2 rounded-lg border transition-all ${
+                    isInvited 
+                      ? 'bg-slate-50 border-slate-200 cursor-not-allowed opacity-70' 
+                      : 'bg-white border-violet-100 hover:border-violet-300 hover:bg-violet-50'
+                  }`}
+                >
+                  <div>
+                    <span className="font-semibold text-slate-700 block">{u.name}</span>
+                    <span className="text-[10px] text-slate-400">{u.position}</span>
+                  </div>
+                  <span className={`font-semibold flex items-center gap-1 ${isInvited ? 'text-slate-400' : 'text-violet-500'}`}>
+                    {isInvited ? (
+                      <><CheckCircle className="w-3 h-3" />초대완료</>
+                    ) : (
+                      <><UserPlus className="w-3 h-3" />초대 발송</>
+                    )}
+                  </span>
+                </button>
+              );
+            })
           )}
         </div>
       )}
@@ -394,23 +426,70 @@ function TeamsSection({
 }) {
   const [actions, setActions] = useState<Record<string, TeamAction | null>>(() => {
     const init: Record<string, TeamAction | null> = {};
-    filteredTeams.forEach((t) => {
-      init[t.teamCode] = getTeamAction(t.teamCode);
+    filteredTeams.forEach((t, idx) => {
+      const storedAction = getTeamAction(t.teamCode);
+      // 데모를 위해 두 번째 팀(idx === 1)이 나를 초대했다는 상태를 강제로 부여 (저장된 상태가 없을 때만)
+      if (idx === 1 && !storedAction && !filteredTeams.some(team => team.isLocal)) {
+        init[t.teamCode] = 'invited';
+      } else {
+        init[t.teamCode] = storedAction;
+      }
     });
     return init;
   });
 
-  const myTeam = filteredTeams.find((t) => t.isLocal);
+  // 유저 초대 관련 상태
+  const [invitedUserIds, setInvitedUserIds] = useState<string[]>([]);
+  const [toast, setToast] = useState<{ message: string; visible: boolean }>({ message: '', visible: false });
+  const [responsePopup, setResponsePopup] = useState<{ userName: string; status: 'accepted' | 'rejected'; visible: boolean } | null>(null);
+
+  const [localTeams, setLocalTeams] = useState<Team[]>(filteredTeams);
+  const myTeam = localTeams.find((t) => t.isLocal);
+
   const hasParticipatingTeam =
-    !!myTeam || filteredTeams.some((t) => (actions[t.teamCode] ?? null) === 'accepted');
+    !!myTeam || localTeams.some((t) => (actions[t.teamCode] ?? null) === 'accepted');
+
+  function showToast(message: string) {
+    setToast({ message, visible: true });
+    setTimeout(() => setToast((prev) => ({ ...prev, visible: false })), 3000);
+  }
+
+  function handleInviteUser(userId: string) {
+    const user = DUMMY_USERS.find((u) => u.id === userId);
+    if (!user || !myTeam) return;
+
+    setInvitedUserIds((prev) => [...prev, userId]);
+    showToast(`${user.name}님에게 초대를 보냈습니다.`);
+
+    // 5초 뒤 랜덤 응답 (50:50)
+    setTimeout(() => {
+      const isAccepted = Math.random() > 0.5;
+      setResponsePopup({
+        userName: user.name,
+        status: isAccepted ? 'accepted' : 'rejected',
+        visible: true,
+      });
+
+      if (isAccepted) {
+        const newMemberCount = myTeam.memberCount + 1;
+        // LocalStorage 업데이트
+        updateTeamStorage(myTeam.teamCode, { memberCount: newMemberCount });
+        
+        // 현재 상태 업데이트
+        setLocalTeams((prev) =>
+          prev.map((t) => (t.teamCode === myTeam.teamCode ? { ...t, memberCount: newMemberCount } : t))
+        );
+      }
+    }, 5000);
+  }
 
   function updateAction(teamCode: string, action: TeamAction | null) {
     if (action === 'applied' || action === 'accepted') {
-      const targetTeam = filteredTeams.find((t) => t.teamCode === teamCode);
+      const targetTeam = localTeams.find((t) => t.teamCode === teamCode);
       if (targetTeam?.isLocal) return;
       const alreadyInTeam =
         !!myTeam ||
-        filteredTeams.some(
+        localTeams.some(
           (t) => t.teamCode !== teamCode && (actions[t.teamCode] ?? null) === 'accepted'
         );
       if (alreadyInTeam) return;
@@ -419,15 +498,45 @@ function TeamsSection({
     setActions((prev) => ({ ...prev, [teamCode]: action }));
   }
 
-  const otherTeams = filteredTeams.filter((t) => !t.isLocal);
-  // 초대 가능: 아직 액션 없음, 또는 거절 후 다시 초대(데모/재테스트용). invited/applied/accepted 는 제외.
-  const invitableTeams = otherTeams.filter((t) => {
-    const a = actions[t.teamCode] ?? null;
-    return a === null || a === 'rejected';
-  });
-
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 relative">
+      {/* 토스트 알림 */}
+      {toast.visible && (
+        <div className="fixed bottom-10 left-1/2 -translate-x-1/2 z-50 animate-bounce">
+          <div className="bg-violet-600 text-white px-6 py-3 rounded-2xl shadow-xl font-bold flex items-center gap-2 border-2 border-violet-400">
+            <CheckCircle className="w-5 h-5" />
+            {toast.message}
+          </div>
+        </div>
+      )}
+
+      {/* 결과 응답 팝업 */}
+      {responsePopup?.visible && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/20 backdrop-blur-sm p-4">
+          <div className="bg-white rounded-3xl p-6 shadow-2xl max-w-xs w-full border border-slate-100 animate-in zoom-in-95 duration-200">
+            <div className={`w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4 ${
+              responsePopup.status === 'accepted' ? 'bg-emerald-100 text-emerald-600' : 'bg-red-100 text-red-600'
+            }`}>
+              {responsePopup.status === 'accepted' ? <Users className="w-8 h-8" /> : <XCircle className="w-8 h-8" />}
+            </div>
+            <h3 className="text-center font-black text-slate-800 text-lg mb-2">
+              초대 {responsePopup.status === 'accepted' ? '수락' : '거절'}
+            </h3>
+            <p className="text-center text-slate-500 text-sm mb-6 leading-relaxed">
+              <span className="font-bold text-slate-700">{responsePopup.userName}</span>님이 초대를 
+              {responsePopup.status === 'accepted' ? ' 수락하여 팀원이 되었습니다!' : ' 거절하셨습니다.'}
+            </p>
+            <button
+              onClick={() => setResponsePopup(null)}
+              className="w-full py-3 rounded-xl font-bold text-white transition-all active:scale-95"
+              style={{ background: responsePopup.status === 'accepted' ? '#10b981' : '#ef4444' }}
+            >
+              확인
+            </button>
+          </div>
+        </div>
+      )}
+
       <div className="flex items-center justify-between">
         <h2 className="text-xl font-black text-slate-800">참여 팀</h2>
         <Link href={`/camp?hackathon=${slug}`}
@@ -440,12 +549,13 @@ function TeamsSection({
         <MyTeamCompositionCard
           team={myTeam}
           hackathonStatus={hackathonStatus}
-          invitableTeams={invitableTeams}
-          onInvite={(teamCode) => updateAction(teamCode, 'invited')}
+          invitableUsers={DUMMY_USERS}
+          invitedUserIds={invitedUserIds}
+          onInvite={handleInviteUser}
         />
       )}
 
-      {filteredTeams.length === 0 ? (
+      {localTeams.length === 0 ? (
         <EmptyState
           title="등록된 팀이 없습니다"
           description="아직 이 해커톤에 팀을 만든 참가자가 없습니다."
@@ -453,7 +563,7 @@ function TeamsSection({
         />
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-          {filteredTeams.map((t) => (
+          {localTeams.map((t) => (
             <TeamCard
               key={t.teamCode}
               team={t}

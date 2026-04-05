@@ -70,7 +70,29 @@ export const HACKATHON_DETAILS: Record<string, HackathonDetail> = {
     sections: {
       overview: {
         summary: '제한된 평가 환경에서 모델의 성능과 추론 속도를 함께 최적화합니다.',
-        teamPolicy: { allowSolo: true, maxTeamSize: 5 },
+        sections: [
+          {
+            title: '대회소개',
+            body: [
+              '제한된 평가 환경에서 모델의 성능과 추론 속도를 동시에 끌어올리는 실전형 경량화 해커톤입니다.',
+              '주어진 리소스 안에서 더 빠르고 효율적인 추론 경험을 만드는 것이 핵심입니다.',
+            ],
+          },
+          {
+            title: '목표',
+            bullets: [
+              '모델 정확도와 응답 속도의 균형을 최적화합니다.',
+              '고정된 실행 환경에서 재현 가능한 제출물을 완성합니다.',
+            ],
+          },
+          {
+            title: '기술/환경',
+            bullets: [
+              '개발 도구: 모델 경량화, 압축, 서빙 최적화 도구 자유 활용',
+              '제출 형태: 별도 설치 없이 실행 가능한 패키지 제출',
+            ],
+          },
+        ],
       },
       info: {
         notice: [
@@ -135,7 +157,28 @@ export const HACKATHON_DETAILS: Record<string, HackathonDetail> = {
       overview: {
         summary:
           '바이브 코딩 환경에서 개발 경험을 개선하는 AI 기반 아이디어를 제안하고 구현합니다. GenAI 활용 워크플로우 혁신을 목표로 합니다.',
-        teamPolicy: { allowSolo: true, maxTeamSize: 4 },
+        sections: [
+          {
+            title: '대회소개',
+            body: [
+              '바이브 코딩 환경에서 개발 경험을 개선하는 AI 기반 아이디어를 제안하고 프로토타입까지 연결하는 공모형 해커톤입니다.',
+            ],
+          },
+          {
+            title: '목표',
+            bullets: [
+              '개발자의 반복 작업을 줄이는 새로운 워크플로우를 제안합니다.',
+              '아이디어를 실제 사용 흐름으로 검증할 수 있는 프로토타입을 완성합니다.',
+            ],
+          },
+          {
+            title: '기술/환경',
+            bullets: [
+              '개발 도구: 생성형 AI 및 프로토타이핑 도구 자유 활용',
+              '제출 형태: 아이디어 설명과 구현 결과를 포함한 발표 자료 PDF 제출',
+            ],
+          },
+        ],
       },
       info: {
         notice: [
@@ -209,7 +252,30 @@ export const HACKATHON_DETAILS: Record<string, HackathonDetail> = {
       overview: {
         summary:
           '기능 명세서만 남기고 사라진 개발자의 문서를 기반으로 바이브 코딩을 통해 웹서비스를 구현·배포하는 해커톤입니다.',
-        teamPolicy: { allowSolo: true, maxTeamSize: 5 },
+        sections: [
+          {
+            title: '대회소개',
+            body: [
+              '웹페이지 형태의 서비스를 개발해야 합니다.',
+              '하지만, 기능은 아직 미완성이고 초보 개발자는 어디서부터 구현해야할지 막막한 상황입니다.',
+              '이번 해커톤에서는 바이브 코딩을 활용해 제공된 자료를 기반으로 웹페이지를 완성하고 팀만의 아이디어로 확장해 더 좋은 서비스 경험을 제안해 주세요.',
+            ],
+          },
+          {
+            title: '목표',
+            bullets: [
+              '제공된 자료를 기반으로 웹페이지를 완성',
+              '자료를 바탕으로 팀의 아이디어로 확장 기능/UX 개선을 목표로 함',
+            ],
+          },
+          {
+            title: '기술/환경',
+            bullets: [
+              '개발 도구 : 기술 제한 없이 바이브 코딩 툴을 활용하여 개발',
+              '배포 : Vercel 배포 필수',
+            ],
+          },
+        ],
       },
       info: {
         notice: [

@@ -961,7 +961,6 @@ export default function HackathonDetailPage({
   }
 
   const sections = detail.sections;
-
   const TABS: { key: TabKey; label: string; icon: React.ReactNode }[] = [
     { key: 'overview', label: '개요', icon: <FileText className="w-4 h-4" /> },
     { key: 'info', label: '안내', icon: <Info className="w-4 h-4" /> },
@@ -1042,20 +1041,44 @@ export default function HackathonDetailPage({
         {/* Tab Content */}
         <div className="bg-white rounded-2xl border border-violet-100 p-7 shadow-sm">
             {activeTab === 'overview' && (
-              <div className="space-y-5">
+              <div className="space-y-6">
                 <h2 className="text-xl font-black text-slate-800">개요</h2>
-                <p className="text-slate-600 leading-relaxed text-[15px]">{sections.overview.summary}</p>
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="rounded-xl p-4 bg-slate-50 border border-slate-100">
-                    <p className="text-xs text-slate-400 mb-1">개인 참가</p>
-                    <p className="text-base font-bold" style={{ color: sections.overview.teamPolicy.allowSolo ? '#059669' : '#dc2626' }}>
-                      {sections.overview.teamPolicy.allowSolo ? '가능' : '불가'}
-                    </p>
-                  </div>
-                  <div className="rounded-xl p-4 bg-slate-50 border border-slate-100">
-                    <p className="text-xs text-slate-400 mb-1">최대 팀원 수</p>
-                    <p className="text-base font-bold text-slate-800">{sections.overview.teamPolicy.maxTeamSize}명</p>
-                  </div>
+                <div className="rounded-2xl border border-slate-200 bg-slate-50/70 p-6">
+                  <p className="max-w-3xl text-[15px] leading-7 text-slate-600">{sections.overview.summary}</p>
+                </div>
+                <div className="grid gap-4 lg:grid-cols-3">
+                  {sections.overview.sections.map((section, index) => (
+                    <section
+                      key={section.title}
+                      className="rounded-2xl border border-slate-200 bg-white p-5"
+                    >
+                      <div className="flex items-center gap-3">
+                        <span className="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-[11px] font-semibold text-slate-500">
+                          {String(index + 1).padStart(2, '0')}
+                        </span>
+                        <p className="text-base font-black text-slate-800">{section.title}</p>
+                      </div>
+                      <div className="mt-4 space-y-3 text-sm leading-6 text-slate-600">
+                        {section.body?.map((paragraph) => (
+                          <p key={paragraph} className="text-[15px] leading-7 text-slate-600">
+                            {paragraph}
+                          </p>
+                        ))}
+                        {section.bullets && section.bullets.length > 0 && (
+                          <ul className="space-y-2 pt-1">
+                            {section.bullets.map((bullet) => (
+                              <li key={bullet} className="flex items-start gap-3">
+                                <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-violet-400" />
+                                <span className="flex-1 text-[14px] leading-6 text-slate-700">
+                                  {bullet}
+                                </span>
+                              </li>
+                            ))}
+                          </ul>
+                        )}
+                      </div>
+                    </section>
+                  ))}
                 </div>
               </div>
             )}

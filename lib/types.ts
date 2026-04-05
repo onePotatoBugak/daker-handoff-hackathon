@@ -24,10 +24,11 @@ export interface HackathonDetail {
   sections: {
     overview: {
       summary: string;
-      teamPolicy: {
-        allowSolo: boolean;
-        maxTeamSize: number;
-      };
+      sections: Array<{
+        title: string;
+        body?: string[];
+        bullets?: string[];
+      }>;
     };
     info: {
       notice: string[];

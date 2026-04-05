@@ -222,6 +222,9 @@ export default function RankingsPage() {
                     <p className="text-slate-500 text-sm mt-1.5">
                         전체 해커톤 참여 기록 기반 · 기간별 필터 지원
                     </p>
+                    <p className="text-slate-400 text-xs mt-2 max-w-2xl">
+                        명세상 닉네임 열은 본 데모에서 팀 단위 집계에 맞춰 팀명으로 표시됩니다.
+                    </p>
                 </div>
 
                 {loading ? (
@@ -394,8 +397,11 @@ export default function RankingsPage() {
                                                     <th className="py-3 px-4 text-left">
                                                         순위
                                                     </th>
-                                                    <th className="py-3 px-4 text-left">
-                                                        팀명
+                                                    <th className="py-3 px-4 text-left align-bottom">
+                                                        <span className="block">팀·표시명</span>
+                                                        <span className="block font-normal normal-case text-[10px] text-slate-400 mt-0.5">
+                                                            (데모: 팀명)
+                                                        </span>
                                                     </th>
                                                     <th className="py-3 px-4 text-right">
                                                         포인트
@@ -539,8 +545,11 @@ export default function RankingsPage() {
                                                     <th className="py-3 px-4 text-left">
                                                         순위
                                                     </th>
-                                                    <th className="py-3 px-4 text-left">
-                                                        팀
+                                                    <th className="py-3 px-4 text-left align-bottom">
+                                                        <span className="block">팀·표시명</span>
+                                                        <span className="block font-normal normal-case text-[10px] text-slate-400 mt-0.5">
+                                                            (데모: 팀명)
+                                                        </span>
                                                     </th>
                                                     <th className="py-3 px-4 text-right">
                                                         점수

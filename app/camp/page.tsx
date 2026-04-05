@@ -3,7 +3,7 @@
 import { useState, useEffect, useMemo, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Plus, X, ExternalLink, Users, Pencil } from 'lucide-react';
+import { Plus, X, ExternalLink, Users, Pencil, AlertTriangle } from 'lucide-react';
 import Navbar from '@/components/Navbar';
 import EmptyState from '@/components/EmptyState';
 import { SkeletonCard } from '@/components/LoadingState';
@@ -337,6 +337,7 @@ function CampContent() {
   const [positionFilter, setPositionFilter] = useState<string>('all');
   const [openOnly, setOpenOnly] = useState(false);
   const [showForm, setShowForm] = useState(false);
+  const [showPrecaution, setShowPrecaution] = useState(false);
   const [editTarget, setEditTarget] = useState<Team | undefined>(undefined);
 
   // URL 파라미터 변경 감지 및 상태 동기화
@@ -407,6 +408,11 @@ function CampContent() {
 
   function openCreate() {
     setEditTarget(undefined);
+    setShowPrecaution(true);
+  }
+
+  function confirmPrecautionAndOpenForm() {
+    setShowPrecaution(false);
     setShowForm(true);
   }
 
@@ -418,6 +424,60 @@ function CampContent() {
   return (
     <div className="min-h-screen" style={{ background: '#f5f3ff' }}>
       <Navbar />
+      {showPrecaution && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm">
+          <div className="relative w-full max-w-md rounded-2xl border border-violet-100 bg-white p-6 shadow-xl">
+            <button
+              type="button"
+              onClick={() => setShowPrecaution(false)}
+              className="absolute right-4 top-4 rounded-lg p-1 text-slate-400 hover:bg-violet-50 hover:text-violet-600"
+              aria-label="닫기"
+            >
+              <X className="w-5 h-5" />
+            </button>
+            <div className="flex items-start gap-3 pr-8">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-50 text-amber-600">
+                <AlertTriangle className="w-5 h-5" />
+              </div>
+              <div>
+                <h2 className="text-lg font-bold text-slate-800">팀 구성 유의사항</h2>
+                <p className="mt-1 text-xs text-slate-500">모집글을 올리기 전에 아래 내용을 확인해 주세요.</p>
+              </div>
+            </div>
+            <ul className="mt-4 space-y-2.5 text-sm text-slate-600">
+              <li className="flex gap-2">
+                <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-violet-400" />
+                개인정보·연락처는 필요한 범위에서만 공유하고, 무리한 요구는 거절할 수 있습니다.
+              </li>
+              <li className="flex gap-2">
+                <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-violet-400" />
+                욕설·차별·협박·스팸 등은 금지되며, 문제가 있으면 운영 정책에 따라 조치될 수 있습니다.
+              </li>
+              <li className="flex gap-2">
+                <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-violet-400" />
+                팀 구성 후에도 각 해커톤 규칙·제출 마감을 반드시 확인해 주세요.
+              </li>
+            </ul>
+            <div className="mt-6 flex flex-wrap justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setShowPrecaution(false)}
+                className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-50"
+              >
+                취소
+              </button>
+              <button
+                type="button"
+                onClick={confirmPrecautionAndOpenForm}
+                className="rounded-xl px-4 py-2 text-sm font-semibold text-white hover:opacity-90"
+                style={{ background: 'linear-gradient(135deg, #6d28d9, #4f46e5)' }}
+              >
+                확인했습니다 · 계속
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       {showForm && (
         <TeamForm
           defaultHackathon={

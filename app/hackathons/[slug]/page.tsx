@@ -961,6 +961,8 @@ export default function HackathonDetailPage({
   }
 
   const sections = detail.sections;
+  const rulesLink = sections.info.links?.rules ?? hackathon.links.rules;
+  const faqLink = sections.info.links?.faq ?? hackathon.links.faq;
   const TABS: { key: TabKey; label: string; icon: React.ReactNode }[] = [
     { key: 'overview', label: '개요', icon: <FileText className="w-4 h-4" /> },
     { key: 'info', label: '안내', icon: <Info className="w-4 h-4" /> },
@@ -1095,8 +1097,8 @@ export default function HackathonDetailPage({
                   ))}
                 </ul>
                 <div className="flex gap-3 mt-2">
-                  {sections.info.links?.rules ? (
-                    <a href={sections.info.links.rules} target="_blank" rel="noopener noreferrer"
+                  {rulesLink ? (
+                    <a href={rulesLink} target="_blank" rel="noopener noreferrer"
                       className="flex items-center gap-1.5 text-sm font-semibold px-4 py-2 rounded-xl transition-all hover:scale-105 bg-violet-50 text-violet-700 border border-violet-200">
                       <ExternalLink className="w-3.5 h-3.5" />규정 보기
                     </a>
@@ -1105,8 +1107,8 @@ export default function HackathonDetailPage({
                       규정 보기 (준비 중)
                     </span>
                   )}
-                  {sections.info.links?.faq ? (
-                    <a href={sections.info.links.faq} target="_blank" rel="noopener noreferrer"
+                  {faqLink ? (
+                    <a href={faqLink} target="_blank" rel="noopener noreferrer"
                       className="flex items-center gap-1.5 text-sm font-semibold px-4 py-2 rounded-xl transition-all hover:scale-105 bg-violet-50 text-violet-700 border border-violet-200">
                       <ExternalLink className="w-3.5 h-3.5" />FAQ 보기
                     </a>

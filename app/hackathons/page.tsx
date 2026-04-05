@@ -53,6 +53,10 @@ export default function HackathonsPage() {
     let result = hackathons ?? [];
     if (statusFilter !== 'all') result = result.filter((h) => h.status === statusFilter);
     if (tagFilter !== 'all') result = result.filter((h) => h.tags.includes(tagFilter));
+    // 마감임박순은 "아직 마감 전" 맥락 — 종료 상태는 제외(단, 상태 필터가 종료일 때는 그대로)
+    if (sort === 'deadline' && statusFilter !== 'ended') {
+      result = result.filter((h) => h.status !== 'ended');
+    }
     return [...result].sort((a, b) => {
       if (sort === 'newest') return new Date(b.period.submissionDeadlineAt).getTime() - new Date(a.period.submissionDeadlineAt).getTime();
       if (sort === 'enddate') return new Date(a.period.endAt).getTime() - new Date(b.period.endAt).getTime();
@@ -199,14 +203,14 @@ export default function HackathonsPage() {
                         <span className="text-slate-400">대회 종료</span>
                         <span className="text-slate-500">{new Date(h.period.endAt).toLocaleDateString('ko-KR')}</span>
                       </div>
-                      {teamCount > 0 && (
-                        <div className="flex justify-between items-center text-xs pt-1">
-                          <span className="flex items-center gap-1 text-slate-400">
-                            <Users className="w-3 h-3" />참여 팀
-                          </span>
-                          <span className="text-emerald-600 font-semibold">{teamCount}팀</span>
-                        </div>
-                      )}
+                      <div className="flex justify-between items-center text-xs pt-1">
+                        <span className="flex items-center gap-1 text-slate-400">
+                          <Users className="w-3 h-3" />참여 팀
+                        </span>
+                        <span className={teamCount > 0 ? 'text-emerald-600 font-semibold' : 'text-slate-400 font-medium'}>
+                          {teamCount}팀
+                        </span>
+                      </div>
                     </div>
 
                     <div className="flex items-center justify-end mt-3 pt-2">
